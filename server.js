@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+const { port } = require('./config.js')
 const express = require('express');
 const app = express();
 app.use(express.json())
@@ -44,7 +44,6 @@ app.post('/create-checkout-session', async (req, res) => {
     }
 })
 
-
-app.listen(3000, () => {
-    console.log('Server is running on localhost:', 3000);
+app.listen(port, () => {
+    console.log('Server is running on localhost:', port);
 });
