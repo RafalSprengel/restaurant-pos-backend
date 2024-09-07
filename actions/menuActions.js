@@ -89,7 +89,7 @@ class MenuAction {
 
     async getSingleProduct(req, res) {
         try {
-            const product = await Menu.findById(req.params.id);
+            const product = await Product.findById(req.params.id);
             res.status(200).json(product);
         }
         catch (err) {
