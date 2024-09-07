@@ -29,12 +29,11 @@ class MenuAction {
             res.status(200).json(categories);
         }
         catch (err) {
-            //console.log("ERROR: " + err);
             res.status(500).json("ERROR: " + err);
         }
     };
 
-    async saveMenuItem(req, res) {
+    async addProduct(req, res) {
         console.log('Received JSON:', req.body);
         const item = await Menu.findOne({ name: req.body.name });
         if (item) {
@@ -76,7 +75,7 @@ class MenuAction {
         }
     };
 
-    async getAllMenuItems(req, res) {
+    async getAllProducts(req, res) {
         try {
             console.log("Wykonuje getAllMenuItems");
             const menuItems = await Menu.find();
@@ -90,7 +89,6 @@ class MenuAction {
 
     async getSingleProduct(req, res) {
         try {
-            console.log("Wykonuje getSingleProduct,id to : ", req.params.id);
             const product = await Menu.findById(req.params.id);
             res.status(200).json(product);
         }

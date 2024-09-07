@@ -4,8 +4,8 @@ const MenuAction = require("../actions/menuActions");
 
 router.post("/saveCategory", MenuAction.saveCategory);
 router.get("/getAllCategories", MenuAction.getAllCategories);
-router.post("/saveMenuItem", MenuAction.saveMenuItem);
-router.get("/getAllMenuItems", MenuAction.getAllMenuItems);
+router.post("/addProduct", MenuAction.addProduct);
+router.get("/getAllProducts", MenuAction.getAllProducts);
 router.get("/getSingleProduct/:id", MenuAction.getSingleProduct);
 router.all("*", (req, res) => {
     res.status(404).json({ "error": "not valid API address" });
