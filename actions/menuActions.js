@@ -1,5 +1,5 @@
-const Menu = require("../db/models/menuItem");
-const Category = require("../db/models/menuCategory");
+const Product = require("../db/models/Product");
+const Category = require("../db/models/Category");
 
 class MenuAction {
     async saveCategory(req, res) {
@@ -35,7 +35,7 @@ class MenuAction {
 
     async addProduct(req, res) {
         console.log('Received JSON:', req.body);
-        const item = await Menu.findOne({ name: req.body.name });
+        const item = await Product.findOne({ name: req.body.name });
         if (item) {
             console.log('item istnieje');
             res.status(400).json({ error: "Item already exists" });
@@ -51,7 +51,7 @@ class MenuAction {
         const isVegetarian = req.body.isVegetarian;
         const isGlutenFree = req.body.isGlutenFree;
         const isAvailable = req.body.isAvailable;
-        const newItem = new Menu({
+        const newItem = new Product({
             name,
             desc,
             price,
@@ -67,7 +67,7 @@ class MenuAction {
         try {
             await newItem.save();
             res.status(200).json({ message: "Item saved successfully" });
-            console.log("Zapisano nowy element menu");
+            console.log("Dodano nowy produkt do bazy");
         }
         catch (err) {
             console.log("ERROR: " + err);
@@ -78,7 +78,7 @@ class MenuAction {
     async getAllProducts(req, res) {
         try {
             console.log("Wykonuje getAllMenuItems");
-            const menuItems = await Menu.find();
+            const menuItems = await Product.find();
             res.status(200).json(menuItems);
         }
         catch (err) {
