@@ -34,7 +34,6 @@ class MenuAction {
     };
 
     async addProduct(req, res) {
-        console.log('Received JSON:', req.body);
         const item = await Product.findOne({ name: req.body.name });
         if (item) {
             console.log('item istnieje');
