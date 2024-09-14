@@ -24,6 +24,48 @@ class MenuAction {
         }
     }
 
+    async updateCategory(req, res) {
+        const { id } = req.params;
+        const { name, description, image } = teq.body
+        try {
+            const updateCategory = await Category.findOneAndUpdate(
+                id,
+                {
+                    $set:
+                    {
+                        name,
+                        description,
+                        image
+                    }
+                },
+                { new: true }
+            );
+            if (updateCategory) {
+                res.status(200).json({ message: "Adding/update successfylly" })
+            } else {
+                res.status(500).json({ error: "Error during adding/updating category" })
+            }
+        }
+        catch (error) {
+            res.status(500).json({ error: "Can not connect to database, details: " + { error } })
+        }
+
+    }
+    async deleteCategory(req, res) {
+        const { id } = req.params;
+        console.log("id to : " + id)
+        try {
+            const deleteCategory = await Category.findByIdAndDelete(id);
+            if (deleteCategory) {
+                res.status(200).json({ message: "Categowy was deleted successfully" })
+            } else {
+                res.status(500).json({ error: "Unable to delete this Category" })
+            }
+        } catch (error) {
+            res.status(500).json({ error: "Can not connect to database, details: " + { error } })
+        }
+    }
+
     async addProduct(req, res) {
         const item = await Product.findOne({ name: req.body.name });
         if (item) {
@@ -66,7 +108,7 @@ class MenuAction {
             } else
                 res.status(500).json({ error: "unable to delete product" })
         } catch (error) {
-            res.status(500).json("Error: " + error)
+            res.status(500).json({ error: "Can not connect to database" })
         }
     }
 
