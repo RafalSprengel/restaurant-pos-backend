@@ -108,7 +108,7 @@ class MenuAction {
 
     async getAllProducts(req, res) {
         try {
-            const menuItems = await Product.find();
+            const menuItems = await Product.find().populate({ path: 'category', select: 'name -_id' });
             res.status(200).json(menuItems);
         } catch (err) {
             console.log("ERROR: " + err);
