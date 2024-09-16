@@ -13,7 +13,7 @@ const categorySchema = new mongoose.Schema({
         type: String,
         required: false
     }
-});
+}, { strict: 'throw' });
 
 const Category = mongoose.model("Category", categorySchema);
 

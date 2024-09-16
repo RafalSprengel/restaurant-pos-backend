@@ -41,8 +41,8 @@ const menuItemSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-});
+}, { strict: 'throw' });
 
-const Product = new mongoose.model("Product", menuItemSchema)
+const Product = mongoose.model("Product", menuItemSchema)
 
 module.exports = Product;
