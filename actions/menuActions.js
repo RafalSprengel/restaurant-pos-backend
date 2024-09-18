@@ -169,15 +169,18 @@ class MenuAction {
     }
 
     async addCategory(req, res) {
-        const { name, image } = req.body;
+        const { name } = req.body;
+        const image = req.file ? req.file.filename : null;
+        const newCategory = new Category({
+            name,
+            image: image ? `uploads/${image}` : null
+        });
 
         try {
             const categoryExists = await Category.findOne({ name });
             if (categoryExists) {
                 return res.status(400).json({ error: "Category already exists" });
             }
-
-            const newCategory = new Category({ name, image });
             await newCategory.save();
             return res.status(200).json({ message: "Category saved successfully" });
         } catch (err) {

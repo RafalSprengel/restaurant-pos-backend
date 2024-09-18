@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const MenuAction = require("../actions/menuActions");
-const upload = require('middleware/upload')
+const upload = require('../middleware/upload')
 
 router.post("/saveCategory", MenuAction.saveCategory);
 router.delete("/deleteCategoty/:id", MenuAction.deleteCategory);

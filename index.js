@@ -6,12 +6,13 @@ const express = require('express');
 const app = express();
 const apiRouter = require('./routes/api');
 const cors = require('cors');
-
-app.use(express.json())
+app.use('/uploads', express.static('uploads'));
+app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:3000', // adres Twojego frontendu
+    origin: 'http://localhost:3000', // frontend address
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true // cookies
 }));
 
 app.use('/api', apiRouter)
