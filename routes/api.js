@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const MenuAction = require("../actions/menuActions");
+const upload = require('middleware/upload')
 
 router.post("/saveCategory", MenuAction.saveCategory);
 router.delete("/deleteCategoty/:id", MenuAction.deleteCategory);
 router.get("/getAllCategories", MenuAction.getAllCategories);
-router.post("/addCategory", MenuAction.addCategory);
-router.put("/updateCategory/:id", MenuAction.updateCategory);
+router.post("/addCategory", upload.single('image'), MenuAction.addCategory);
+router.put("/updateCategory/:id", upload.single('image'), MenuAction.updateCategory);
 router.post("/addProduct", MenuAction.addProduct);
 router.delete("/deleteProduct/:id", MenuAction.deleteProduct);
 router.get("/getAllProducts", MenuAction.getAllProducts);

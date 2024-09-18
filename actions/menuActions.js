@@ -2,10 +2,10 @@ const Product = require("../db/models/Product");
 const Category = require("../db/models/Category");
 
 class MenuAction {
-    // Zapis nowej kategorii
+
     async saveCategory(req, res) {
-        const { name, description, image } = req.body; // Poprawione nazwisko opisu
-        const newCategory = new Category({ name, description, image });
+        const { name, desc, image } = req.body; // Poprawione nazwisko opisu
+        const newCategory = new Category({ name, desc, image });
 
         try {
             await newCategory.save();
@@ -16,7 +16,6 @@ class MenuAction {
         }
     }
 
-    // Pobranie wszystkich kategorii
     async getAllCategories(req, res) {
         try {
             const categories = await Category.find();
@@ -27,15 +26,14 @@ class MenuAction {
         }
     }
 
-    // Aktualizacja kategorii
     async updateCategory(req, res) {
         const { id } = req.params;
-        const { name, description, image } = req.body; // Poprawione req.body
+        const { name, desc, image } = req.body; // Poprawione req.body
 
         try {
             const updatedCategory = await Category.findByIdAndUpdate(
                 id,
-                { $set: { name, description, image } },
+                { $set: { name, desc, image } },
                 { new: true }
             );
 
@@ -50,7 +48,6 @@ class MenuAction {
         }
     }
 
-    // Usunięcie kategorii
     async deleteCategory(req, res) {
         const { id } = req.params;
         try {
@@ -66,9 +63,8 @@ class MenuAction {
         }
     }
 
-    // Dodanie nowego produktu
     async addProduct(req, res) {
-        const { name, description, price, image, category, isFeatured, ingridiens, isVegetarian, isGlutenFree, isAvailable } = req.body;
+        const { name, desc, price, image, category, isFeatured, ingridiens, isVegetarian, isGlutenFree, isAvailable } = req.body;
 
         try {
             const productExists = await Product.findOne({ name });
@@ -78,7 +74,7 @@ class MenuAction {
 
             const newProduct = new Product({
                 name,
-                description,
+                desc,
                 price,
                 image,
                 category,
@@ -97,10 +93,9 @@ class MenuAction {
         }
     }
 
-    // Aktualizacja produktu
     async updateProduct(req, res) {
         const { id } = req.params;
-        const { name, description, price, image, category, isFeatured, ingridiens, isVegetarian, isGlutenFree, isAvailable } = req.body;
+        const { name, desc, price, image, category, isFeatured, ingridiens, isVegetarian, isGlutenFree, isAvailable } = req.body;
 
         try {
             const updatedProduct = await Product.findByIdAndUpdate(
@@ -108,7 +103,7 @@ class MenuAction {
                 {
                     $set: {
                         name,
-                        description,
+                        desc,
                         price,
                         image,
                         category,
@@ -133,7 +128,6 @@ class MenuAction {
         }
     }
 
-    // Usunięcie produktu
     async deleteProduct(req, res) {
         const { id } = req.params;
 
@@ -150,7 +144,6 @@ class MenuAction {
         }
     }
 
-    // Pobranie wszystkich produktów
     async getAllProducts(req, res) {
         try {
             const products = await Product.find().populate({ path: 'category', select: 'name -_id' });
@@ -161,7 +154,6 @@ class MenuAction {
         }
     }
 
-    // Pobranie jednego produktu
     async getSingleProduct(req, res) {
         try {
             const product = await Product.findById(req.params.id);
@@ -176,7 +168,6 @@ class MenuAction {
         }
     }
 
-    // Dodanie nowej kategorii
     async addCategory(req, res) {
         const { name, image } = req.body;
 
