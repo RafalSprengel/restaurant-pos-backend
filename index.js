@@ -1,5 +1,6 @@
 require('dotenv').config();
-require('./db/mongoose.js')
+require('./db/mongoose.js');
+require('dotenv').config();
 
 const { port } = require('./config.js')
 const express = require('express');

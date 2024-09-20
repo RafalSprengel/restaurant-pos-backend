@@ -1,5 +1,8 @@
 const Product = require("../db/models/Product");
 const Category = require("../db/models/Category");
+const fs = require('fs');
+const path = require('path');
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3001';
 
 class MenuAction {
 
@@ -28,12 +31,34 @@ class MenuAction {
 
     async updateCategory(req, res) {
         const { id } = req.params;
-        const { name, desc, image } = req.body; // Poprawione req.body
+        const { name, index } = req.body; // Poprawione req.body
+        const updateFields = { name, index };
+        if (req.file) updateFields.image = `${SERVER_URL}/uploads/${req.file.filename}`
 
         try {
+            const existingCategory = await Category.findById(id);
+            if (!existingCategory) {
+                return res.status(404).json({ error: "Category not found" });
+            }
+            if (req.file) {
+                const oldImagePath = existingCategory.image;
+                updateFields.image = `${SERVER_URL}/uploads/${req.file.filename}`;
+                if (oldImagePath) {
+                    const oldImageFullPath = path.join(__dirname, '..', 'uploads', path.basename(oldImagePath));
+
+                    fs.unlink(oldImageFullPath, (err) => {
+                        if (err) {
+                            console.error("Failed to delete old image: ", err);
+                        } else {
+                            console.log("Old image deleted successfully");
+                        }
+                    });
+                }
+            }
+
             const updatedCategory = await Category.findByIdAndUpdate(
                 id,
-                { $set: { name, desc, image } },
+                { $set: updateFields },
                 { new: true }
             );
 
@@ -168,12 +193,27 @@ class MenuAction {
         }
     }
 
+    async getSingleCategory(req, res) {
+        console.log('id to : ' + req.params.id)
+        try {
+            const category = await Category.findById(req.params.id);
+            if (category) {
+                res.status(200).json(category)
+            } else {
+                res.status(404).json({ error: "Categoty not found" });
+            }
+        } catch (error) {
+            console.error('Error: ' + error);
+            return res.status(500).json({ error: "Error fetching category" });
+        }
+    }
     async addCategory(req, res) {
-        const { name } = req.body;
+        const { name, index } = req.body;
         const image = req.file ? req.file.filename : null;
         const newCategory = new Category({
             name,
-            image: image ? `uploads/${image}` : null
+            index,
+            image: image ? `${SERVER_URL}/uploads/${image}` : null
         });
 
         try {

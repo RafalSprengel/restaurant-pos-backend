@@ -5,8 +5,8 @@ const categorySchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    desc: {
-        type: String,
+    index: {
+        type: Number,
         required: false
     },
     image: {
