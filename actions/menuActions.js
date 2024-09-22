@@ -170,9 +170,23 @@ class MenuAction {
     }
 
     async getAllProducts(req, res) {
+        const limit = parseInt(req.query.limit) || 10;
+        const page = parseInt(req.query.page) || 1;
+        const offset = (page - 1) * limit;
         try {
-            const products = await Product.find().populate({ path: 'category', select: 'name -_id' });
-            return res.status(200).json(products);
+            const products = await Product.find()
+                .populate({ path: 'category', select: 'name -_id' })
+                .skip(offset)
+                .limit(limit);
+
+            const totalProducts = await Product.countDocuments();
+
+            return res.status(200).json({
+                currentPage: page,
+                totalPages: Math.ceil(totalProducts / limit),
+                products: products,
+            });
+
         } catch (err) {
             console.error("ERROR fetching products: ", err);
             return res.status(500).json({ error: "Error fetching products" });
@@ -194,7 +208,6 @@ class MenuAction {
     }
 
     async getSingleCategory(req, res) {
-        console.log('id to : ' + req.params.id)
         try {
             const category = await Category.findById(req.params.id);
             if (category) {
