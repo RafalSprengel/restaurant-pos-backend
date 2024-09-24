@@ -7,10 +7,9 @@ router.post("/saveCategory", MenuAction.saveCategory);
 router.delete("/deleteCategoty/:id", MenuAction.deleteCategory);
 router.get("/getAllCategories", MenuAction.getAllCategories);
 router.post("/addCategory", upload.single('image'), MenuAction.addCategory);
-
 router.post("/addProduct", MenuAction.addProduct);
 router.delete("/deleteProduct/:id", MenuAction.deleteProduct);
-router.get("/getAllProducts", MenuAction.getAllProducts);
+router.get("/getProducts", MenuAction.getProducts);
 router.put("/updateProduct/:id", MenuAction.updateProduct);
 router.put("/updateCategory/:id", upload.single('image'), MenuAction.updateCategory);
 router.get("/getSingleProduct/:id", MenuAction.getSingleProduct);

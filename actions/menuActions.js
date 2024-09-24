@@ -169,17 +169,24 @@ class MenuAction {
         }
     }
 
-    async getAllProducts(req, res) {
+    async getProducts(req, res) {
+
         const limit = parseInt(req.query.limit) || 10;
         const page = parseInt(req.query.page) || 1;
         const offset = (page - 1) * limit;
+        const searchString = req.query.search || '';
+        console.log(searchString)
+        const search = searchString ? { name: { $regex: searchString, $options: 'i' } } : {};
+
         try {
-            const products = await Product.find()
+
+            const products = await Product
+                .find(search)
                 .populate({ path: 'category', select: 'name -_id' })
                 .skip(offset)
                 .limit(limit);
 
-            const totalProducts = await Product.countDocuments();
+            const totalProducts = await Product.countDocuments(search);
 
             return res.status(200).json({
                 currentPage: page,
