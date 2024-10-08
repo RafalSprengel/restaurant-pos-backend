@@ -1,21 +1,20 @@
-const Product = require("../db/models/Product");
-const Category = require("../db/models/Category");
+const Product = require('../db/models/Product');
+const Category = require('../db/models/Category');
 const fs = require('fs');
 const path = require('path');
 const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3001';
 
 class MenuAction {
-
     async saveCategory(req, res) {
         const { name, desc, image } = req.body; // Poprawione nazwisko opisu
         const newCategory = new Category({ name, desc, image });
 
         try {
             await newCategory.save();
-            return res.status(200).json({ message: "Category saved successfully" });
+            return res.status(200).json({ message: 'Category saved successfully' });
         } catch (err) {
-            console.error("ERROR saving category: ", err);
-            return res.status(500).json({ error: "Error saving category" });
+            console.error('ERROR saving category: ', err);
+            return res.status(500).json({ error: 'Error saving category' });
         }
     }
 
@@ -24,8 +23,8 @@ class MenuAction {
             const categories = await Category.find();
             return res.status(200).json(categories);
         } catch (err) {
-            console.error("ERROR fetching categories: ", err);
-            return res.status(500).json({ error: "Error fetching categories" });
+            console.error('ERROR fetching categories: ', err);
+            return res.status(500).json({ error: 'Error fetching categories' });
         }
     }
 
@@ -33,12 +32,12 @@ class MenuAction {
         const { id } = req.params;
         const { name, index } = req.body; // Poprawione req.body
         const updateFields = { name, index };
-        if (req.file) updateFields.image = `${SERVER_URL}/uploads/${req.file.filename}`
+        if (req.file) updateFields.image = `${SERVER_URL}/uploads/${req.file.filename}`;
 
         try {
             const existingCategory = await Category.findById(id);
             if (!existingCategory) {
-                return res.status(404).json({ error: "Category not found" });
+                return res.status(404).json({ error: 'Category not found' });
             }
             if (req.file) {
                 const oldImagePath = existingCategory.image;
@@ -48,28 +47,24 @@ class MenuAction {
 
                     fs.unlink(oldImageFullPath, (err) => {
                         if (err) {
-                            console.error("Failed to delete old image: ", err);
+                            console.error('Failed to delete old image: ', err);
                         } else {
-                            console.log("Old image deleted successfully");
+                            console.log('Old image deleted successfully');
                         }
                     });
                 }
             }
 
-            const updatedCategory = await Category.findByIdAndUpdate(
-                id,
-                { $set: updateFields },
-                { new: true }
-            );
+            const updatedCategory = await Category.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
 
             if (updatedCategory) {
-                return res.status(200).json({ message: "Category updated successfully" });
+                return res.status(200).json({ message: 'Category updated successfully' });
             } else {
-                return res.status(404).json({ error: "Category not found" });
+                return res.status(404).json({ error: 'Category not found' });
             }
         } catch (err) {
-            console.error("ERROR updating category: ", err);
-            return res.status(500).json({ error: "Error updating category" });
+            console.error('ERROR updating category: ', err);
+            return res.status(500).json({ error: 'Error updating category' });
         }
     }
 
@@ -78,13 +73,13 @@ class MenuAction {
         try {
             const deletedCategory = await Category.findByIdAndDelete(id);
             if (deletedCategory) {
-                return res.status(200).json({ message: "Category deleted successfully" });
+                return res.status(200).json({ message: 'Category deleted successfully' });
             } else {
-                return res.status(404).json({ error: "Category not found" });
+                return res.status(404).json({ error: 'Category not found' });
             }
         } catch (err) {
-            console.error("ERROR deleting category: ", err);
-            return res.status(500).json({ error: "Error deleting category" });
+            console.error('ERROR deleting category: ', err);
+            return res.status(500).json({ error: 'Error deleting category' });
         }
     }
 
@@ -94,7 +89,7 @@ class MenuAction {
         try {
             const productExists = await Product.findOne({ name });
             if (productExists) {
-                return res.status(400).json({ error: "Product already exists" });
+                return res.status(400).json({ error: 'Product already exists' });
             }
 
             const newProduct = new Product({
@@ -107,14 +102,14 @@ class MenuAction {
                 ingridiens,
                 isVegetarian,
                 isGlutenFree,
-                isAvailable
+                isAvailable,
             });
 
             await newProduct.save();
-            return res.status(200).json({ message: "Product saved successfully" });
+            return res.status(200).json({ message: 'Product saved successfully' });
         } catch (err) {
-            console.error("ERROR saving product: ", err);
-            return res.status(500).json({ error: "Error saving product" });
+            console.error('ERROR saving product: ', err);
+            return res.status(500).json({ error: 'Error saving product' });
         }
     }
 
@@ -136,20 +131,20 @@ class MenuAction {
                         ingridiens,
                         isVegetarian,
                         isGlutenFree,
-                        isAvailable
-                    }
+                        isAvailable,
+                    },
                 },
                 { new: true }
             );
 
             if (updatedProduct) {
-                return res.status(200).json({ message: "Product updated successfully" });
+                return res.status(200).json({ message: 'Product updated successfully' });
             } else {
-                return res.status(404).json({ error: "Product not found" });
+                return res.status(404).json({ error: 'Product not found' });
             }
         } catch (err) {
-            console.error("ERROR updating product: ", err);
-            return res.status(500).json({ error: "Error updating product" });
+            console.error('ERROR updating product: ', err);
+            return res.status(500).json({ error: 'Error updating product' });
         }
     }
 
@@ -159,44 +154,59 @@ class MenuAction {
         try {
             const deletedProduct = await Product.findByIdAndDelete(id);
             if (deletedProduct) {
-                return res.status(200).json({ message: "Product deleted successfully" });
+                return res.status(200).json({ message: 'Product deleted successfully' });
             } else {
-                return res.status(404).json({ error: "Product not found" });
+                return res.status(404).json({ error: 'Product not found' });
             }
         } catch (err) {
-            console.error("ERROR deleting product: ", err);
-            return res.status(500).json({ error: "Error deleting product" });
+            console.error('ERROR deleting product: ', err);
+            return res.status(500).json({ error: 'Error deleting product' });
         }
     }
 
     async getProducts(req, res) {
-
         const limit = parseInt(req.query.limit) || 10;
         const page = parseInt(req.query.page) || 1;
         const offset = (page - 1) * limit;
         const searchString = req.query.search || '';
-        console.log(searchString)
+        const sortBy = req.query.sortBy || 'name';
+        const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
+
         const search = searchString ? { name: { $regex: searchString, $options: 'i' } } : {};
 
         try {
+            let categoryFilter = {};
+            if (req.query.category) {
+                const category = await Category.findOne({
+                    name: req.query.category,
+                });
+                if (category) {
+                    // Użyj _id kategorii jako filtru
+                    categoryFilter = { category: category._id };
+                } else {
+                    // Jeśli kategoria nie istnieje, zwróć pustą listę
+                    return res.status(404).json({ error: 'Category not found' });
+                }
+            }
 
-            const products = await Product
-                .find(search)
+            const filters = { ...search, ...categoryFilter };
+
+            const products = await Product.find(filters)
                 .populate({ path: 'category', select: 'name -_id' })
+                .sort({ [sortBy]: sortOrder })
                 .skip(offset)
                 .limit(limit);
 
-            const totalProducts = await Product.countDocuments(search);
+            const totalProducts = await Product.countDocuments(filters);
 
             return res.status(200).json({
                 currentPage: page,
                 totalPages: Math.ceil(totalProducts / limit),
                 products: products,
             });
-
         } catch (err) {
-            console.error("ERROR fetching products: ", err);
-            return res.status(500).json({ error: "Error fetching products" });
+            console.error('ERROR fetching products: ', err);
+            return res.status(500).json({ error: 'Error fetching products' });
         }
     }
 
@@ -206,11 +216,11 @@ class MenuAction {
             if (product) {
                 return res.status(200).json(product);
             } else {
-                return res.status(404).json({ error: "Product not found" });
+                return res.status(404).json({ error: 'Product not found' });
             }
         } catch (err) {
-            console.error("ERROR fetching product: ", err);
-            return res.status(500).json({ error: "Error fetching product" });
+            console.error('ERROR fetching product: ', err);
+            return res.status(500).json({ error: 'Error fetching product' });
         }
     }
 
@@ -218,34 +228,35 @@ class MenuAction {
         try {
             const category = await Category.findById(req.params.id);
             if (category) {
-                res.status(200).json(category)
+                res.status(200).json(category);
             } else {
-                res.status(404).json({ error: "Categoty not found" });
+                res.status(404).json({ error: 'Categoty not found' });
             }
         } catch (error) {
             console.error('Error: ' + error);
-            return res.status(500).json({ error: "Error fetching category" });
+            return res.status(500).json({ error: 'Error fetching category' });
         }
     }
+
     async addCategory(req, res) {
         const { name, index } = req.body;
         const image = req.file ? req.file.filename : null;
         const newCategory = new Category({
             name,
             index,
-            image: image ? `${SERVER_URL}/uploads/${image}` : null
+            image: image ? `${SERVER_URL}/uploads/${image}` : null,
         });
 
         try {
             const categoryExists = await Category.findOne({ name });
             if (categoryExists) {
-                return res.status(400).json({ error: "Category already exists" });
+                return res.status(400).json({ error: 'Category already exists' });
             }
             await newCategory.save();
-            return res.status(200).json({ message: "Category saved successfully" });
+            return res.status(200).json({ message: 'Category saved successfully' });
         } catch (err) {
-            console.error("ERROR saving category: ", err);
-            return res.status(500).json({ error: "Error saving category" });
+            console.error('ERROR saving category: ', err);
+            return res.status(500).json({ error: 'Error saving category' });
         }
     }
 }
