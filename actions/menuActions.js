@@ -247,6 +247,7 @@ class MenuAction {
             image: image ? `${SERVER_URL}/uploads/${image}` : null,
         });
 
+        console.log(req.body);
         try {
             const categoryExists = await Category.findOne({ name });
             if (categoryExists) {
