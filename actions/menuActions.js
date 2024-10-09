@@ -20,7 +20,7 @@ class MenuAction {
 
     async getAllCategories(req, res) {
         try {
-            const categories = await Category.find();
+            const categories = await Category.find().sort({ index: 1 });
             return res.status(200).json(categories);
         } catch (err) {
             console.error('ERROR fetching categories: ', err);
