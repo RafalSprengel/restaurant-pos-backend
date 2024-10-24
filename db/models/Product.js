@@ -1,48 +1,57 @@
 const mongoose = require('mongoose');
+const AutoIncrement = require('mongoose-sequence')(mongoose);
+const timestamps = require('mongoose-timestamp');
 
-const menuItemSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
+const productSchema = new mongoose.Schema(
+    {
+        productNumber: {
+            type: Number,
+            unique: true,
+        },
+        name: {
+            type: String,
+            required: true,
+        },
+        desc: {
+            type: String,
+        },
+        price: {
+            type: Number,
+            required: true,
+        },
+        image: {
+            type: String,
+        },
+        category: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Category',
+            required: true,
+        },
+        isFeatured: {
+            type: Boolean,
+            default: false,
+        },
+        ingridiens: [{ type: String }],
+        isVegetarian: {
+            type: Boolean,
+            default: false,
+        },
+        isGlutenFree: {
+            type: Boolean,
+            default: false,
+        },
+        isAvailable: {
+            type: Boolean,
+            default: true,
+        },
     },
-    desc: {
-        type: String
-    },
-    price: {
-        type: Number,
-        required: true
-    },
-    image: {
-        type: String
-    },
-    category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category',
-        required: true
-    },
-    isFeatured: {
-        type: Boolean,
-        default: false
-    },
-    ingridiens: [{ type: String }],
-    isVegetarian: {
-        type: Boolean,
-        default: false
-    },
-    isGlutenFree: {
-        type: Boolean,
-        default: false
-    },
-    isAvailable: {
-        type: Boolean,
-        default: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-}, { strict: 'throw' });
+    { strict: 'throw' }
+);
 
-const Product = mongoose.model("Product", menuItemSchema)
+productSchema.plugin(timestamps); //add timestamps to mongoose
+
+productSchema.plugin(AutoIncrement, { inc_field: 'productNumber' }); //add autoincrement to mongoose
+
+const Product = mongoose.model('Product', productSchema);
 
 module.exports = Product;
