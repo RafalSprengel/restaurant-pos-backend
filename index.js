@@ -1,46 +1,60 @@
+// Load environment variables
 require('dotenv').config();
+
+// Import models and database connection
 const { Customer } = require('./db/models/Customer');
 const Order = require('./db/models/Order');
 require('./db/mongoose.js');
 const Product = require('./db/models/Product');
 const { port } = require('./config.js');
-const express = require('express');
-const app = express();
-const apiRouter = require('./routes/api');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const cors = require('cors');
-//app.use(express.json());
 
+// Import necessary libraries
+const express = require('express');
+const cors = require('cors');
+const passport = require('./config/passport');
+const apiRouter = require('./routes/api');
+const authRoutes = require('./routes/authRoutes');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// Create Express app
+const app = express();
+app.use(express.json()); // Parse JSON request bodies
+
+// CORS configuration
 app.use(
     cors({
-        origin: 'http://localhost:3000', // adres frontend
+        origin: 'http://localhost:3000', // Frontend address
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         allowedHeaders: ['Content-Type', 'Authorization'],
-        credentials: true, // ciasteczka
+        credentials: true, // Enable cookies
     })
 );
 
+// Initialize Passport
+app.use(passport.initialize());
+app.use('/auth', authRoutes); // Authentication routes
+
+// Webhook endpoint for Stripe
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-    // console.log('wykonuje webhook ...');
     const sig = req.headers['stripe-signature'];
     let event;
 
     try {
+        // Verify the webhook signature
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
-        return res.status(400).end();
+        return res.status(400).end(); // Return error if verification fails
     }
-
-    // console.log(`Receiver event.type: ${event.type}`);
 
     switch (event.type) {
         case 'payment_intent.succeeded':
-            //   console.log('Payment was successful');
+            // Handle successful payment
             const paymentIntent = event.data.object;
             const orderId = paymentIntent.metadata.orderId;
             const order = await Order.findById(orderId);
 
             if (order) {
+                // Update order status
                 order.status = 'completed';
                 order.isPaid = true;
                 order.paidAt = new Date();
@@ -52,7 +66,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             break;
 
         case 'payment_intent.payment_failed':
-            //   console.log('Payment failed or requires new payment method');
+            // Handle failed payment
             const failedIntent = event.data.object;
             const failedOrderId = failedIntent.metadata.orderId;
             const failedOrder = await Order.findById(failedOrderId);
@@ -65,7 +79,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             break;
 
         case 'payment_intent.canceled':
-            //    console.log('Payment canceled');
+            // Handle canceled payment
             const canceledIntent = event.data.object;
             const canceledOrderId = canceledIntent.metadata.orderId;
             const canceledOrder = await Order.findById(canceledOrderId);
@@ -77,28 +91,29 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             }
             break;
 
-        // Other events
         default:
-            // console.log(`Unhandled event type ${event.type}`);
+            // Handle unhandled event types
             break;
     }
 
-    res.sendStatus(200);
+    res.sendStatus(200); // Acknowledge receipt of the event
 });
 
+// Serve static files
 app.use('/uploads', express.static('uploads'));
 app.use('/api', apiRouter);
 app.use(express.static('public'));
 
+// Create checkout session for Stripe
 app.post('/create-checkout-session', express.json(), async (req, res) => {
-    console.log('Wykonuje create-checkout-session');
+    console.log('Creating checkout session');
     try {
-        //Creating new customer to database
+        // Check if customer exists in database
         let customer = null;
         const customerExists = await Customer.findOne({ email: req.body.customer.email });
 
         if (!customerExists) {
-            console.log('Tworzę nowego customera');
+            console.log('Creating new customer');
             customer = new Customer({
                 name: req.body.customer.name,
                 surname: req.body.customer.surname,
@@ -107,8 +122,8 @@ app.post('/create-checkout-session', express.json(), async (req, res) => {
             });
             await customer.save();
         } else {
-            //if email exists in database then update name and surname
-            console.log('Zmieniam imię i nazwisko w bazie');
+            // Update customer's name and surname if email exists
+            console.log('Updating customer name and surname in the database');
             customer = await Customer.findOneAndUpdate(
                 { email: req.body.customer.email },
                 { name: req.body.customer.name, surname: req.body.customer.surname }
@@ -116,17 +131,18 @@ app.post('/create-checkout-session', express.json(), async (req, res) => {
         }
 
         const productIds = req.body.items.map((item) => item.id);
-        const products = await Product.find({ _id: { $in: productIds } }).populate('category'); //.select('price name');
+        const products = await Product.find({ _id: { $in: productIds } }).populate('category');
 
-        // Adding quantity to each product
+        // Add quantity to each product
         const productsWithQuantity = products.map((el) => {
             const item = req.body.items.find((item) => item.id === el._id.toString());
             const productObject = el.toObject();
-            productObject.quantity = item ? item.quantity : 0; // set default quantity to 0 if item not found
+            productObject.quantity = item ? item.quantity : 0; // Default quantity to 0 if item not found
             return productObject;
         });
-        // Creating new order in database
-        console.log('Customer to : ', customer);
+
+        // Create new order in the database
+        console.log('Customer data: ', customer);
         const order = new Order({
             customer: {
                 customerNumber: customer.customerNumber,
@@ -142,13 +158,11 @@ app.post('/create-checkout-session', express.json(), async (req, res) => {
                 price: product.price,
                 quantity: product.quantity,
                 totalPrice: product.price * product.quantity,
-                ingridients: product.ingredients,
+                ingredients: product.ingredients,
                 isVegetarian: product.isVegetarian,
                 isGlutenFree: product.isGlutenFree,
             })),
-            totalPrice: productsWithQuantity.reduce((sum, product) => {
-                return sum + product.price * product.quantity;
-            }, 0),
+            totalPrice: productsWithQuantity.reduce((sum, product) => sum + product.price * product.quantity, 0),
             deliveryAddress: req.body?.deliveryAddress,
             orderType: req.body.orderType,
             orderTime: req.body?.orderTime,
@@ -159,6 +173,7 @@ app.post('/create-checkout-session', express.json(), async (req, res) => {
 
         await order.save();
 
+        // Create Stripe checkout session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'blik', 'p24'],
             line_items: productsWithQuantity.map((product) => ({
@@ -167,7 +182,7 @@ app.post('/create-checkout-session', express.json(), async (req, res) => {
                     product_data: {
                         name: product.name,
                     },
-                    unit_amount: Math.round(product.price * 100),
+                    unit_amount: Math.round(product.price * 100), // Convert price to cents
                 },
                 quantity: product.quantity,
             })),
@@ -183,12 +198,13 @@ app.post('/create-checkout-session', express.json(), async (req, res) => {
             },
         });
 
-        res.json({ url: session.url });
+        res.json({ url: session.url }); // Return the session URL
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.status(500).json({ error: e.message }); // Handle errors
     }
 });
 
+// Get session status for Stripe
 app.get('/session_status', async (req, res) => {
     try {
         const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
@@ -204,6 +220,7 @@ app.get('/session_status', async (req, res) => {
     }
 });
 
+// Start server
 app.listen(port, () => {
-    console.log('serwer słucha na porcie ' + port);
+    console.log('Server is listening on port ' + port);
 });

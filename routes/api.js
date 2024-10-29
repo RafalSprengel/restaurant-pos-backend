@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const MenuAction = require('../actions/menuActions');
 const upload = require('../middleware/upload');
+const authentMiddleware = require('../middleware/authentMiddleware');
 
 router.post('/saveCategory', MenuAction.saveCategory);
 router.delete('/deleteCategory/:id', MenuAction.deleteCategory);
@@ -19,6 +20,11 @@ router.get('/getSingleProduct/:id', MenuAction.getSingleProduct);
 router.get('/getSingleCategory/:id', MenuAction.getSingleCategory);
 router.get('/getOrders', MenuAction.getOrders);
 router.get('/getOrders/:id', MenuAction.getOrders);
+
+router.all('/user', authentMiddleware, (req, res) => {
+    res.json(req.user);
+});
+
 router.all('*', (req, res) => {
     res.status(404).json({ error: 'not valid API address' });
 });

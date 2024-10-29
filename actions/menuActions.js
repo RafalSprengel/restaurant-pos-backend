@@ -61,28 +61,38 @@ class MenuAction {
 
     async getOrders(req, res) {
         const { id } = req.params;
-        const limit = parseInt(req.query.limit) || 3;
+        const limit = parseInt(req.query.limit) || 10;
         const page = parseInt(req.query.page) || 1;
         const offset = (page - 1) * limit;
+        const searchString = req.query.search || '';
         const sortBy = req.query.sortBy || 'createdAt';
-        const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
-        const filters = id ? { _id: id } : {};
-        let orders;
-        // console.log('id:', id);
-        // console.log('filters:', filters);
-        // console.log('sortBy:', sortBy);
-        // console.log('sortOrder:', sortOrder);
+        const sortOrder = req.query.sortOrder === 'desc' ? 1 : -1;
+
+        const search = searchString
+            ? {
+                  $or: [
+                      { 'customer.name': { $regex: searchString, $options: 'i' } },
+                      { 'customer.surname': { $regex: searchString, $options: 'i' } },
+                      { 'customer.email': { $regex: searchString, $options: 'i' } },
+                      { 'product.name': { $regex: searchString, $options: 'i' } },
+                      { orderType: { $regex: searchString, $options: 'i' } },
+                      { orderNumber: { $regex: searchString, $options: 'i' } },
+                      { note: { $regex: searchString, $options: 'i' } },
+                      { status: { $regex: searchString, $options: 'i' } },
+                  ],
+              }
+            : {};
 
         try {
-            id
-                ? (orders = await Order.findOne(filters).populate('customer', 'name surname'))
-                : (orders = await Order.find()
-                      .sort({ [sortBy]: sortOrder })
-                      .skip(offset)
-                      .limit(limit)
-                      .populate('customer', 'name surname'));
+            const orders = await Order.find(search)
+                .sort({ [sortBy]: sortOrder })
+                .collation({ locale: 'en', strength: 2 })
+                .skip(offset)
+                .limit(limit)
+                .populate('customer', 'name surname');
 
-            const totalOrders = await Order.countDocuments(filters);
+            const totalOrders = await Order.countDocuments(search);
+
             if (orders) {
                 return res.status(200).json({
                     currentPage: page,
@@ -185,7 +195,7 @@ class MenuAction {
 
     async addProduct(req, res) {
         const { name, desc, price, image, category, isFeatured, ingridiens, isVegetarian, isGlutenFree, isAvailable } = req.body;
-        if ((!name || !desc || !price || !image || !category, !isFeatured || !ingridiens || !isVegetarian || !isGlutenFree || !isAvailable)) {
+        if (!name || !price || !category) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
@@ -253,7 +263,6 @@ class MenuAction {
 
     async deleteProduct(req, res) {
         const { id } = req.params;
-
         try {
             const deletedProduct = await Product.findByIdAndDelete(id);
             if (deletedProduct) {

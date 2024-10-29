@@ -9,7 +9,7 @@ const orderItemSchema = new mongoose.Schema({
     price: { type: Number, required: true }, // Cena w momencie zamówienia
     quantity: { type: Number, required: true }, // Ilość zamówionych sztuk
     totalPrice: { type: Number, required: true }, // Łączna cena (price * quantity)
-    ingridiens: [{ type: String }], // Lista składników w momencie zamówienia
+    ingredients: [{ type: String }], // Lista składników w momencie zamówienia
     isVegetarian: { type: Boolean, required: true }, // Czy produkt jest wegetariański
     isGlutenFree: { type: Boolean, required: true }, // Czy produkt jest bezglutenowy
 });
