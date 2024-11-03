@@ -13,7 +13,7 @@ const express = require('express');
 const cors = require('cors');
 const passport = require('./config/passport');
 const apiRouter = require('./routes/api');
-const authRoutes = require('./routes/authRoutes');
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Create Express app
@@ -32,7 +32,6 @@ app.use(
 
 // Initialize Passport
 app.use(passport.initialize());
-app.use('/auth', authRoutes); // Authentication routes
 
 // Webhook endpoint for Stripe
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {

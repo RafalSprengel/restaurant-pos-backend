@@ -5,6 +5,7 @@ const upload = require('../middleware/upload');
 const authentMiddleware = require('../middleware/authentMiddleware');
 const authorize = require('../middleware/authorize');
 const User = require('../db/models/User');
+const authRoutes = require('../routes/authRoutes');
 
 router.post('/saveCategory', MenuAction.saveCategory);
 router.delete('/deleteCategory/:id', MenuAction.deleteCategory);
@@ -22,6 +23,7 @@ router.get('/getSingleProduct/:id', MenuAction.getSingleProduct);
 router.get('/getSingleCategory/:id', MenuAction.getSingleCategory);
 router.get('/getOrders', MenuAction.getOrders);
 router.get('/getOrders/:id', MenuAction.getOrders);
+router.use('/auth', authRoutes); // Authentication routes
 
 router.all('/user', authentMiddleware, async (req, res) => {
     const user = await User.findOne({ _id: req.user.id });
@@ -30,7 +32,7 @@ router.all('/user', authentMiddleware, async (req, res) => {
     }
     res.json({
         user_id: req.user.id,
-        Message: 'User authenticated',
+        Message: 'Access granted for members, moderatord and admins only',
         user_email: user.email,
         role: user.role,
     });
@@ -43,7 +45,7 @@ router.all('/moderator', authentMiddleware, authorize(['admin', 'moderator']), a
     }
     res.json({
         user_id: req.user.id,
-        Message: 'User authenticated',
+        Message: 'Access granted for admin and moderators only',
         user_email: user.email,
         role: user.role,
     });
@@ -56,7 +58,7 @@ router.all('/admin', authentMiddleware, authorize(['admin']), async (req, res) =
     }
     res.json({
         user_id: req.user.id,
-        Message: 'User authenticated',
+        Message: 'Access granted for admin only',
         user_email: user.email,
         role: user.role,
     });
