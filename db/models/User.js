@@ -1,8 +1,15 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const timestamps = require('mongoose-timestamp');
 
 const userSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+    },
+    surname: {
+        type: String,
+        required: true,
+    },
     email: {
         type: String,
         required: false,
@@ -23,10 +30,7 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true,
     },
-    name: {
-        type: String,
-        required: true,
-    },
+
     role: {
         type: String,
         enum: ['admin', 'moderator', 'member'],

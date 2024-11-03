@@ -3,6 +3,8 @@ const router = express.Router();
 const MenuAction = require('../actions/menuActions');
 const upload = require('../middleware/upload');
 const authentMiddleware = require('../middleware/authentMiddleware');
+const authorize = require('../middleware/authorize');
+const User = require('../db/models/User');
 
 router.post('/saveCategory', MenuAction.saveCategory);
 router.delete('/deleteCategory/:id', MenuAction.deleteCategory);
@@ -21,8 +23,43 @@ router.get('/getSingleCategory/:id', MenuAction.getSingleCategory);
 router.get('/getOrders', MenuAction.getOrders);
 router.get('/getOrders/:id', MenuAction.getOrders);
 
-router.all('/user', authentMiddleware, (req, res) => {
-    res.json(req.user);
+router.all('/user', authentMiddleware, async (req, res) => {
+    const user = await User.findOne({ _id: req.user.id });
+    if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+    }
+    res.json({
+        user_id: req.user.id,
+        Message: 'User authenticated',
+        user_email: user.email,
+        role: user.role,
+    });
+});
+
+router.all('/moderator', authentMiddleware, authorize(['admin', 'moderator']), async (req, res) => {
+    const user = await User.findOne({ _id: req.user.id });
+    if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+    }
+    res.json({
+        user_id: req.user.id,
+        Message: 'User authenticated',
+        user_email: user.email,
+        role: user.role,
+    });
+});
+
+router.all('/admin', authentMiddleware, authorize(['admin']), async (req, res) => {
+    const user = await User.findOne({ _id: req.user.id });
+    if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+    }
+    res.json({
+        user_id: req.user.id,
+        Message: 'User authenticated',
+        user_email: user.email,
+        role: user.role,
+    });
 });
 
 router.all('*', (req, res) => {
