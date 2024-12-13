@@ -18,6 +18,8 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Create Express app
 const app = express();
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 app.use(express.json()); // Parse JSON request bodies
 
 // CORS configuration
@@ -72,7 +74,9 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             if (failedOrder) {
                 failedOrder.status = 'failed';
                 failedOrder.isPaid = false;
-                failedOrder.paymentFailureReason = failedIntent.last_payment_error ? failedIntent.last_payment_error.message : 'Unknown reason';
+                failedOrder.paymentFailureReason = failedIntent.last_payment_error
+                    ? failedIntent.last_payment_error.message
+                    : 'Unknown reason';
                 await failedOrder.save();
             }
             break;
@@ -98,9 +102,9 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     res.sendStatus(200); // Acknowledge receipt of the event
 });
 
+app.use('/api', apiRouter);
 // Serve static files
 app.use('/uploads', express.static('uploads'));
-app.use('/api', apiRouter);
 app.use(express.static('public'));
 
 // Create checkout session for Stripe
@@ -109,7 +113,9 @@ app.post('/create-checkout-session', express.json(), async (req, res) => {
     try {
         // Check if customer exists in database
         let customer = null;
-        const customerExists = await Customer.findOne({ email: req.body.customer.email });
+        const customerExists = await Customer.findOne({
+            email: req.body.customer.email,
+        });
 
         if (!customerExists) {
             console.log('Creating new customer');
@@ -125,12 +131,17 @@ app.post('/create-checkout-session', express.json(), async (req, res) => {
             console.log('Updating customer name and surname in the database');
             customer = await Customer.findOneAndUpdate(
                 { email: req.body.customer.email },
-                { name: req.body.customer.name, surname: req.body.customer.surname }
+                {
+                    name: req.body.customer.name,
+                    surname: req.body.customer.surname,
+                }
             );
         }
 
         const productIds = req.body.items.map((item) => item.id);
-        const products = await Product.find({ _id: { $in: productIds } }).populate('category');
+        const products = await Product.find({
+            _id: { $in: productIds },
+        }).populate('category');
 
         // Add quantity to each product
         const productsWithQuantity = products.map((el) => {
