@@ -5,14 +5,15 @@ const authController = require('../../controllers/authController');
 
 const router = express.Router();
 
-router.post('/register-new-user', authController.registerNewCustomer);
-router.post('/user-login', authController.loginUser);
+router.post('/register-new-customer', authController.registerNewCustomer);
+router.post('/login-customer', authController.loginCustomer);
+router.post('/logout-customer', authentMiddleware, authController.logoutCustomer);
 
-router.post('/register-new-customer', authController.registerNewSystemUser);
-router.post('/customer-login', authController.loginCustomer);
+router.post('/register-new-user', authController.registerNewSystemUser);
+router.post('/login-user', authController.loginUser);
+router.post('/logout-user', authentMiddleware, authController.logoutUser);
 
 router.post('/refresh-token', authController.refreshToken);
-router.post('/logout', authentMiddleware, authController.logout);
 
 router.get('/google', authController.googleAuth);
 router.get('/google/callback', passport.authenticate('google', { session: false }), authController.googleCallback);

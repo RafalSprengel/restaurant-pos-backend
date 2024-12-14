@@ -4,6 +4,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const User = require('../db/models/User');
+const Customer = require('../db/models/Customer');
 const UserRefreshToken = require('../db/models/UserRefreshToken');
 const UserInvalidToken = require('../db/models/UserInvalidToken');
 
@@ -42,6 +43,61 @@ exports.registerNewCustomer = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error during registration' });
+    }
+};
+
+exports.loginCustomer = async (req, res) => {
+    const { email, password } = req.body;
+
+    // Sprawdzamy, czy wszystkie wymagane dane są w żądaniu
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        let customer = await Customer.findOne({ email });
+        if (!customer) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        const isMatch = await bcrypt.compare(password, customer.password);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        const token = generateToken(customer);
+
+        const refreshToken = jwt.sign({ userId: customer._id }, process.env.JWT_SECRET_REFRESH, {
+            expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
+        });
+
+        await UserRefreshToken.findOneAndUpdate({ userId: customer._id }, { refreshToken }, { upsert: true });
+
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 3600000, // 1 godzina
+            sameSite: 'Lax',
+        });
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            path: '/api/auth/refreshToken',
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 3600000 * 24 * 15, // 15 dni
+            sameSite: 'Lax',
+        });
+
+        res.status(200).json({
+            _id: customer._id,
+            name: customer.name,
+            surname: customer.surname,
+            email: customer.email,
+            role: customer.role,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error during login' });
     }
 };
 
@@ -181,8 +237,8 @@ exports.refreshToken = async (req, res) => {
     }
 };
 
-// Logout function
-exports.logout = async (req, res) => {
+// user Logout function
+exports.logoutUser = async (req, res) => {
     try {
         res.clearCookie('jwt', {
             httpOnly: true,
@@ -198,12 +254,49 @@ exports.logout = async (req, res) => {
             path: '/api/auth/refreshToken',
         });
 
-        await UserRefreshToken.deleteMany({ userId: req.user.id });
+        await UserRefreshToken.deleteMany({ userId: req.user._id });
+
         await UserInvalidToken.create({
             token: req.cookies.jwt,
             userId: req.user._id,
             expirationTime: req.accessToken.exp,
         });
+
+        res.status(204).send();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// customer Logout function
+exports.logoutCustomer = async (req, res) => {
+    try {
+        // Usuwanie ciasteczek
+        res.clearCookie('jwt', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax',
+            path: '/',
+        });
+
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax',
+            path: '/api/auth/refreshToken',
+        });
+
+        // Usunięcie refresh tokenu z bazy danych
+        await CustomerRefreshToken.deleteMany({ customerId: req.user._id });
+
+        // Dodanie tokenu do tabeli z nieaktualnymi tokenami
+        await CustomerInvalidToken.create({
+            token: req.cookies.jwt,
+            customerId: req.user._id,
+            expirationTime: req.accessToken.exp,
+        });
+
         res.status(204).send();
     } catch (error) {
         console.error(error);
@@ -237,6 +330,7 @@ passport.use(
 exports.googleAuth = passport.authenticate('google', {
     scope: ['profile', 'email'],
 });
+
 exports.googleCallback = (req, res) => {
     const token = generateToken(req.user);
     res.redirect(`/auth/success?token=${token}`);
