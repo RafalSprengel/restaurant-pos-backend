@@ -1,5 +1,4 @@
 const router = express.Router();
-const { Customer } = require('../../db/models/Customer');
 const customerController = require('../../controllers/customerController');
 const authentMiddleware = require('../../middleware/authentMiddleware');
 const authorize = require('../../middleware/authorize');

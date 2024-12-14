@@ -7,5 +7,6 @@ const User = require('../db/models/User');
 
 router.all('/user', authentMiddleware, authorize(['member', 'moderator', 'admin']), userController.user);
 router.get('/getUsers', authentMiddleware, authorize(['admin']), userController.getUsers);
+router.get('/getRoles', authentMiddleware, authorize(['admin']), userController.getRoles);
 
 module.exports = router;

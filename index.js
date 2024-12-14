@@ -1,11 +1,11 @@
 require('dotenv').config();
-require('./db/mongoose.js');
+//require('./db/mongoose.js');
 
 const { port } = require('./config.js');
 const express = require('express');
 const cors = require('cors');
 const passport = require('./config/passport');
-const apiRouter = require('./routes/api');
+const apiRoutes = require('./routes/api');
 const app = express();
 const cookieParser = require('cookie-parser');
 
@@ -25,7 +25,7 @@ app.use(
 
 app.use(passport.initialize());
 
-app.use('/api', apiRouter);
+app.use('/api', apiRoutes);
 
 app.use('/uploads', express.static('uploads'));
 
