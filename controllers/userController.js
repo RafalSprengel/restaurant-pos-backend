@@ -3,6 +3,20 @@ const User = require('../db/models/User');
 /**
  * Fetch all users and sort them by name.
  */
+exports.user = async (req, res) => {
+    const user = await User.findOne({ _id: req.user._id });
+    if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+    }
+    res.json({
+        _id: req.user.id,
+        name: user.name,
+        surname: user.surname,
+        email: user.email,
+        role: user.role,
+    });
+};
+
 exports.getUsers = async (req, res) => {
     try {
         const users = await User.find().sort({ name: 1 });

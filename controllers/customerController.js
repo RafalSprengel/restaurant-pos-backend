@@ -4,7 +4,7 @@ const { Order } = require('../db/models/Order');
 /**
  * Fetch all customers with their number of orders.
  */
-exports.customers = async (req, res) => {
+exports.customer = async (req, res) => {
     if (!req.user || !req.user._id) {
         return res.status(401).json({ error: 'User not authenticated' });
     }

@@ -54,7 +54,7 @@ exports.getOrders = async (req, res) => {
 /**
  * Fetch a single order by ID.
  */
-exports.collationgetSingleOrder = async (req, res) => {
+exports.getSingleOrder = async (req, res) => {
     const { id } = req.params;
     try {
         const order = await Order.findById(id).populate('customer', 'name surname');
