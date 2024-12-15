@@ -1,7 +1,8 @@
-import express from 'express';
-import authentMiddleware from '../middleware/authentMiddleware';
-import authorize from '../middleware/authorize';
-import orderController from '../controllers/orderController';
+const express = require('express');
+const authentMiddleware = require('../../middleware/authentMiddleware');
+const authorize = require('../../middleware/authorize');
+const orderController = require('../../controllers/orderController');
+
 const router = express.Router();
 
 router.get('/getOrders', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.getOrders);

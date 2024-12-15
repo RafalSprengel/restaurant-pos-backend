@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const timestamps = require('mongoose-timestamp');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
-const userSchema = new mongoose.Schema({
-    userNumber: {
+const staffSchema = new mongoose.Schema({
+    staffNumber: {
         type: Number,
         unique: true,
     },
@@ -45,8 +45,8 @@ const userSchema = new mongoose.Schema({
 
 userSchema.plugin(timestamps);
 
-userSchema.plugin(AutoIncrement, { inc_field: 'userNumber' }); //add autoincrement to mongoose
+userSchema.plugin(AutoIncrement, { inc_field: 'staffNumber' }); //add autoincrement to mongoose
 
-const User = mongoose.model('User', userSchema);
+const Staff = mongoose.model('Staff', staffSchema);
 
-module.exports = User;
+module.exports = Staff;

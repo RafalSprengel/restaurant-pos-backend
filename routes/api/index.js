@@ -1,5 +1,4 @@
 const express = require('express');
-
 const authRoutes = require('./auth');
 const orderRoutes = require('./orders');
 const productRoutes = require('./products');

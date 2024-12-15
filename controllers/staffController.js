@@ -1,25 +1,25 @@
-const User = require('../db/models/User');
+const Staff = require('../db/models/Staff');
 
 /**
  * Fetch all users and sort them by name.
  */
-exports.user = async (req, res) => {
-    const user = await User.findOne({ _id: req.user._id });
-    if (!user) {
-        return res.status(401).json({ error: 'User not found' });
+exports.staff = async (req, res) => {
+    const staff = await Staff.findOne({ _id: req.staff._id });
+    if (!staff) {
+        return res.status(401).json({ error: 'Staff member not found' });
     }
     res.json({
-        _id: req.user.id,
-        name: user.name,
-        surname: user.surname,
-        email: user.email,
-        role: user.role,
+        _id: req.staff.id,
+        name: staff.name,
+        surname: staff.surname,
+        email: staff.email,
+        role: staff.role,
     });
 };
 
-exports.getUsers = async (req, res) => {
+exports.getStaff = async (req, res) => {
     try {
-        const users = await User.find().sort({ name: 1 });
+        const users = await Staff.find().sort({ name: 1 });
 
         if (users) {
             return res.status(200).json(users);
@@ -32,9 +32,9 @@ exports.getUsers = async (req, res) => {
     }
 };
 
-exports.getRoles = async (req, res) => {
+exports.getStaffRoles = async (req, res) => {
     try {
-        const roles = await User.schema.path('role').enumValues;
+        const roles = await Staff.schema.path('role').enumValues;
 
         roles.sort((a, b) => {
             if (a.toLowerCase().startsWith('member')) return -1;

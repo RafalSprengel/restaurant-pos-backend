@@ -6,6 +6,6 @@ router.post('/create-checkout-session', express.json(), stripeController.createC
 
 router.get('/session_status', stripeController.getSessionStatus);
 
-router.post('/webhook', express.raw({ type: 'application/json' }), stripeController.handleWebhook);
+router.post('/webhook', express.raw({ type: 'application/json' }), stripeController.webhook);
 
 module.exports = router;
