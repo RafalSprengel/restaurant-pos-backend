@@ -9,8 +9,8 @@ router.post('/register-new-customer', authController.registerNewCustomer);
 router.post('/login-customer', authController.loginCustomer);
 router.post('/logout-customer', authentMiddleware, authController.logoutCustomer);
 
-router.post('/register-new-staff', authController.registerNewSystemUser);
-router.post('/login-staff', authController.loginUser);
+router.post('/register-new-staff', authController.registerNewStaffMember);
+router.post('/login-staff', authController.loginStaff);
 router.post('/logout-staff', authentMiddleware, authController.logoutUser);
 
 router.post('/refresh-token', authController.refreshToken);

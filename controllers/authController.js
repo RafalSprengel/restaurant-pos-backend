@@ -4,7 +4,6 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const User = require('../db/models/User');
-const Customer = require('../db/models/Customer');
 const UserRefreshToken = require('../db/models/UserRefreshToken');
 const UserInvalidToken = require('../db/models/UserInvalidToken');
 
@@ -102,7 +101,7 @@ exports.loginCustomer = async (req, res) => {
 };
 
 // Sysytem user registration function
-exports.registerNewSystemUser = async (req, res) => {
+exports.registerNewStaffMember = async (req, res) => {
     const { name, surname, email, role, password } = req.body;
     if (!name || !surname || !email || !password) return res.status(422).json({ error: 'Missing required fields' });
 
@@ -133,7 +132,7 @@ exports.registerNewSystemUser = async (req, res) => {
 };
 
 // Local login function
-exports.loginUser = async (req, res) => {
+exports.loginStaff = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(422).json({ error: 'Missing required fields' });
 
