@@ -21,4 +21,8 @@ router.get('/google/callback', passport.authenticate('google', { session: false 
 router.get('/facebook', authController.facebookAuth);
 router.get('/facebook/callback', passport.authenticate('facebook', { session: false }), authController.facebookCallback);
 
+router.all('*', (_, res) => {
+    res.status(404).json({ error: 'Not a valid API address' });
+});
+
 module.exports = router;
