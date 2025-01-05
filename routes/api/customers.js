@@ -4,7 +4,7 @@ const customerController = require('../../controllers/customerController');
 const authentMiddleware = require('../../middleware/authentMiddleware');
 const authorize = require('../../middleware/authorize');
 
-router.get('/customer', authentMiddleware, customerController.customer);
+router.get('/session', authentMiddleware, customerController.session);
 router.get('/get-customers', authentMiddleware, authorize(['member', 'moderator', 'admin']), customerController.getCustomers);
 router.delete('/delete-customer/:id', authentMiddleware, authorize(['admin']), customerController.deleteCustomer);
 

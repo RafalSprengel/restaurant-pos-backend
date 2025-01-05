@@ -1,22 +1,14 @@
 const {Customer}  = require('../db/models/Customer');
 const  Order  = require('../db/models/Order');
 
-exports.customer = async (req, res) => {
+exports.session = async (req, res) => {
     if (!req.user || !req.user._id) {
         return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const customer = await Customer.findOne({ _id: req.user._id });
-
-    if (!customer) {
-        return res.status(401).json({ error: 'Customer not found' });
-    }
     res.json({
-        _id: req.user.id,
-        name: customer.name,
-        surname: customer.surname,
-        email: customer.email,
-        role: customer.role,
+        _id: req.user._id,
+        name: req.user.name,
     });
 };
 

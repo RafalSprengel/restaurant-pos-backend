@@ -4,7 +4,6 @@ function authorize(roles = []) {
     return async function (req, res, next) {
         try {
             const staff = await Staff.findById(req.user._id);
-
             if (!staff || !roles.includes(staff.role)) {
                 return res.status(403).json({ error: 'Access denied' });
             }

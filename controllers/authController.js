@@ -6,21 +6,26 @@ const FacebookStrategy = require('passport-facebook').Strategy;
 const RefreshToken = require('../db/models/RefreshToken');
 const InvalidToken = require('../db/models/InvalidToken');
 const {Customer} = require('../db/models/Customer');
+const {Staff} = require('../db/models/Staff')
 
 const generateToken = (user) => {
-    return jwt.sign(
-        {
-            userId: user._id,
-            userName: user.name,
-            userSurname: user.surname,
-            email: user.email,
-            role: user.role,
-        },
-        process.env.JWT_SECRET,
-        {
-            expiresIn: process.env.JWT_TOKEN_EXPIRES_IN,
-        }
-    );
+    const payload = {
+        _id: user._id,
+        name: user.name,
+        surname: user.surname,
+        email: user.email,
+        role: user.role,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_TOKEN_EXPIRES_IN,
+    });
+
+    const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
+        expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
+    });
+
+    return { token, refreshToken }; 
 };
 
 // Sysytem customer registration function
@@ -72,11 +77,7 @@ exports.loginCustomer = async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        const token = generateToken(customer);
-
-        const refreshToken = jwt.sign({ userId: customer._id }, process.env.JWT_SECRET_REFRESH, {
-            expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
-        });
+        const { token, refreshToken } = generateToken(customer);
 
         await RefreshToken.findOneAndUpdate({ userId: customer._id }, { refreshToken }, { upsert: true });
         res.cookie('jwt', token, {
@@ -116,11 +117,11 @@ exports.registerNewStaffMember = async (req, res) => {
     try {
         if (!process.env.JWT_SECRET || !process.env.JWT_TOKEN_EXPIRES_IN) return res.status(500).json({ error: 'Internal server error' });
 
-        let user = await User.findOne({ email });
-        if (user) return res.status(409).json({ error: 'User already exists' });
+        let staff = await Staff.findOne({ email });
+        if (staff) return res.status(409).json({ error: 'Staff member already exists' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        user = new User({
+        staff = new Staff({
             name,
             surname,
             email,
@@ -128,10 +129,10 @@ exports.registerNewStaffMember = async (req, res) => {
             password: hashedPassword,
         });
 
-        await user.save();
+        await staff.save();
         res.status(201).json({
-            message: 'User registered, you can log in now using your credentials',
-            userId: user._id,
+            message: 'Staff registered, you can log in now using your credentials',
+            userId: staff._id,
         });
     } catch (err) {
         console.error(err);
@@ -145,22 +146,18 @@ exports.loginStaff = async (req, res) => {
     if (!email || !password) return res.status(422).json({ error: 'Missing required fields' });
 
     try {
-        const user = await User.findOne({ email });
-        if (!user) {
+        const staff = await Staff.findOne({ email });
+        if (!staff) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, staff.password);
 
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
-        const token = generateToken(user);
+        const { token, refreshToken } = generateToken(staff);
 
-        const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_REFRESH, {
-            expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
-        });
-
-        await RefreshToken.findOneAndUpdate({ userId: user._id }, { refreshToken }, { upsert: true });
+        await RefreshToken.findOneAndUpdate({ userId: staff._id }, { refreshToken }, { upsert: true });
 
         res.cookie('jwt', token, {
             httpOnly: true,
@@ -177,11 +174,11 @@ exports.loginStaff = async (req, res) => {
             sameSite: 'Lax',
         });
         res.status(200).json({
-            _id: user._id,
-            name: user.name,
-            surname: user.surname,
-            email: user.email,
-            role: user.role,
+            _id: staff._id,
+            name: staff.name,
+            surname: staff.surname,
+            email: staff.email,
+            role: staff.role,
         });
     } catch (err) {
         console.error(err);
@@ -248,7 +245,6 @@ exports.refreshToken = async (req, res) => {
 exports.logout = async (req, res) => {
     try {
         const currentToken = req.cookies.jwt;
-        const currentRefreshToken = req.cookies.refreshToken;
 
         // Clear cookies
         res.clearCookie('jwt', {

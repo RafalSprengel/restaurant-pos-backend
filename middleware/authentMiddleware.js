@@ -24,11 +24,12 @@ const authentMiddleware = async (req, res, next) => {
         }
 
         req.accessToken = { value: accessToken, exp: decodedAccessToken.exp };
-        req.user = {
-            _id: decodedAccessToken.userId,
-            name: decodedAccessToken.userName,
-            role: decodedAccessToken.role,
-        };
+        // req.user = {
+        //     _id: decodedAccessToken._id,
+        //     name: decodedAccessToken.name,
+        //     role: decodedAccessToken.role,
+        // };
+        req.user = decodedAccessToken;
         next();
     } catch (err) {
         if (err instanceof jwt.TokenExpiredError) {

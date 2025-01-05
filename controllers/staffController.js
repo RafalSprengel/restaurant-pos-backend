@@ -2,17 +2,14 @@ const {Staff} = require('../db/models/Staff');
 const mongoose = require('mongoose');
 
 
-exports.staff = async (req, res) => {
-    const staff = await Staff.findOne({ _id: req.staff._id });
-    if (!staff) {
-        return res.status(401).json({ error: 'Staff member not found' });
+exports.session = async (req, res) => {
+    if (!req.user || !req.user._id) {
+        return res.status(401).json({ error: 'User not authenticated' });
     }
     res.json({
-        _id: req.staff.id,
-        name: staff.name,
-        surname: staff.surname,
-        email: staff.email,
-        role: staff.role,
+        _id: req.user._id,
+        name: req.user.name,
+        role: req.user.role
     });
 };
 
