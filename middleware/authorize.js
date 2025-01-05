@@ -1,15 +1,11 @@
-const User = require('../db/models/User');
+const {Staff} = require('../db/models/Staff');
 
 function authorize(roles = []) {
     return async function (req, res, next) {
-        console.log('req.user._id: ', req.user._id);
         try {
-            console.log('req.user._id: ', req.user._id);
+            const staff = await Staff.findById(req.user._id);
 
-            // Upewnij się, że odwołujesz się do `req.user._id`
-            const user = await User.findById(req.user._id);
-
-            if (!user || !roles.includes(user.role)) {
+            if (!staff || !roles.includes(staff.role)) {
                 return res.status(403).json({ error: 'Access denied' });
             }
 

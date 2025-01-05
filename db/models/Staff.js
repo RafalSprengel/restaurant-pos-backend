@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const timestamps = require('mongoose-timestamp');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
-const userSchema = new mongoose.Schema({
-    userNumber: {
+const staffSchema = new mongoose.Schema({
+    staffNumber: {
         type: Number,
         unique: true,
     },
@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
 
     role: {
         type: String,
-        enum: ['customer', 'member', 'moderator', 'admin'],
+        enum: [ 'member', 'moderator', 'admin'],
         default: 'member',
     },
     isRegistered: {
@@ -47,10 +47,9 @@ const userSchema = new mongoose.Schema({
     },
 });
 
-userSchema.plugin(timestamps);
+staffSchema.plugin(timestamps);
 
-userSchema.plugin(AutoIncrement, { inc_field: 'userNumber' }); //add autoincrement to mongoose
+staffSchema.plugin(AutoIncrement, { inc_field: 'staffNumber' }); //add autoincrement to mongoose
 
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+const Staff = mongoose.model('Staff', staffSchema);
+module.exports = { Staff, staffSchema };

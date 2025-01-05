@@ -4,14 +4,14 @@ const AutoIncrement = require('mongoose-sequence')(mongoose);
 const timestamps = require('mongoose-timestamp');
 
 const orderItemSchema = new mongoose.Schema({
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, // Referencja do oryginalnego produktu
-    name: { type: String, required: true }, // Nazwa produktu w momencie zamówienia
-    price: { type: Number, required: true }, // Cena w momencie zamówienia
-    quantity: { type: Number, required: true }, // Ilość zamówionych sztuk
-    totalPrice: { type: Number, required: true }, // Łączna cena (price * quantity)
-    ingredients: [{ type: String }], // Lista składników w momencie zamówienia
-    isVegetarian: { type: Boolean, required: true }, // Czy produkt jest wegetariański
-    isGlutenFree: { type: Boolean, required: true }, // Czy produkt jest bezglutenowy
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    quantity: { type: Number, required: true },
+    totalPrice: { type: Number, required: true },
+    ingredients: [{ type: String }],
+    isVegetarian: { type: Boolean, required: true },
+    isGlutenFree: { type: Boolean, required: true },
 });
 
 const orderSchema = new mongoose.Schema({

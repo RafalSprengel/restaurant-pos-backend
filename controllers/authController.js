@@ -3,10 +3,9 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
-const User = require('../db/models/User');
-const UserRefreshToken = require('../db/models/UserRefreshToken');
-const UserInvalidToken = require('../db/models/UserInvalidToken');
-const CustomerRefreshToken = require('../db/models/CustomerRefreshToken');
+const RefreshToken = require('../db/models/RefreshToken');
+const InvalidToken = require('../db/models/InvalidToken');
+const {Customer} = require('../db/models/Customer');
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -25,32 +24,40 @@ const generateToken = (user) => {
 };
 
 // Sysytem customer registration function
-exports.registerNewCustomer = async (req, res) => {
+exports.registerNewCustomer = async (req, res) =>  {
     const { name, surname, email, password } = req.body;
-    if (!name || !surname || !email || !password) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-    let customer = await Customer.findOne({ email });
-    if (customer) {
-        return res.status(409).json({ error: 'This email is already registered' });
-    }
+    if (!name || !surname || !email || !password) return res.status(422).json({ error: 'Missing required fields' });
+
     try {
-        customer = new Customer({ name, surname, email, password });
+        if (!process.env.JWT_SECRET || !process.env.JWT_TOKEN_EXPIRES_IN) return res.status(500).json({ error: 'Internal server error' });
+
+        let customer = await Customer.findOne({ email });
+        if (customer) return res.status(409).json({ error: 'Customer already exists' });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        customer = new Customer({
+            name,
+            surname,
+            email,
+            isRegistered: true,
+            password: hashedPassword,
+        });
+
         await customer.save();
         res.status(201).json({
-            message: 'Customer has been successfully registered, you can log in now using your credentials',
+            message: 'Customer registered, you can log in now using your credentials',
+            customerId: customer._id,
         });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error during registration' });
     }
-};
+}
+;
 
 exports.loginCustomer = async (req, res) => {
     const { email, password } = req.body;
-    console.log(req.body);
 
-    // Sprawdzamy, czy wszystkie wymagane dane są w żądaniu
     if (!email || !password) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -60,7 +67,6 @@ exports.loginCustomer = async (req, res) => {
         if (!customer) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
-
         const isMatch = await bcrypt.compare(password, customer.password);
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid email or password' });
@@ -72,8 +78,7 @@ exports.loginCustomer = async (req, res) => {
             expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
         });
 
-        await UserRefreshToken.findOneAndUpdate({ userId: customer._id }, { refreshToken }, { upsert: true });
-
+        await RefreshToken.findOneAndUpdate({ userId: customer._id }, { refreshToken }, { upsert: true });
         res.cookie('jwt', token, {
             httpOnly: true,
             path: '/',
@@ -81,9 +86,10 @@ exports.loginCustomer = async (req, res) => {
             maxAge: 3600000, // 1 godzina
             sameSite: 'Lax',
         });
+
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            path: '/api/auth/refreshToken',
+            path: '/api/auth/refresh-token',
             secure: process.env.NODE_ENV === 'production',
             maxAge: 3600000 * 24 * 15, // 15 dni
             sameSite: 'Lax',
@@ -154,7 +160,7 @@ exports.loginStaff = async (req, res) => {
             expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
         });
 
-        await UserRefreshToken.findOneAndUpdate({ userId: user._id }, { refreshToken }, { upsert: true });
+        await RefreshToken.findOneAndUpdate({ userId: user._id }, { refreshToken }, { upsert: true });
 
         res.cookie('jwt', token, {
             httpOnly: true,
@@ -165,7 +171,7 @@ exports.loginStaff = async (req, res) => {
         });
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            path: '/api/auth/refreshToken',
+            path: '/api/auth/refresh-token',
             secure: process.env.NODE_ENV === 'production',
             maxAge: 3600000 * 24 * 15, //15days
             sameSite: 'Lax',
@@ -187,7 +193,6 @@ exports.loginStaff = async (req, res) => {
 exports.refreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
-        const accessToken = req.cookies.jwt; // Zmieniona nazwa zmiennej
 
         if (!refreshToken) return res.status(401).json({ error: 'Missing refresh token' });
 
@@ -196,7 +201,7 @@ exports.refreshToken = async (req, res) => {
 
         if (!decodedRefreshToken) return res.status(401).json({ error: 'Invalid or expired refresh token' });
 
-        const existingToken = await UserRefreshToken.findOne({
+        const existingToken = await RefreshToken.findOne({
             refreshToken,
             userId: decodedRefreshToken.userId,
         });
@@ -213,7 +218,7 @@ exports.refreshToken = async (req, res) => {
             expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
         });
 
-        await UserRefreshToken.findOneAndUpdate({ userId: decodedRefreshToken.userId }, { refreshToken: newRefreshToken }, { upsert: true, new: true });
+        await RefreshToken.findOneAndUpdate({ userId: decodedRefreshToken.userId }, { refreshToken: newRefreshToken }, { upsert: true, new: true });
         res.cookie('jwt', newAccessToken, {
             httpOnly: true,
             path: '/',
@@ -221,9 +226,10 @@ exports.refreshToken = async (req, res) => {
             maxAge: 3600000, //1h
             sameSite: 'Lax',
         });
+
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
-            path: '/api/auth/refreshToken',
+            path: '/api/auth/refresh-token',
             secure: process.env.NODE_ENV === 'production',
             maxAge: 3600000 * 24 * 15, //15days
             sameSite: 'Lax',
@@ -239,8 +245,12 @@ exports.refreshToken = async (req, res) => {
 };
 
 // user Logout function
-exports.logoutUser = async (req, res) => {
+exports.logout = async (req, res) => {
     try {
+        const currentToken = req.cookies.jwt;
+        const currentRefreshToken = req.cookies.refreshToken;
+
+        // Clear cookies
         res.clearCookie('jwt', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -252,58 +262,29 @@ exports.logoutUser = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Lax',
-            path: '/api/auth/refreshToken',
+            path: '/api/auth/refresh-token',
         });
 
-        await UserRefreshToken.deleteMany({ userId: req.user._id });
+        if (req.user && req.user._id && currentToken) {
+            // Remove refresh tokens from valid tokens collection
+            await RefreshToken.deleteMany({ userId: req.user._id });
 
-        await UserInvalidToken.create({
-            token: req.cookies.jwt,
-            userId: req.user._id,
-            expirationTime: req.accessToken.exp,
-        });
+            // Add both tokens to invalid tokens collection
+            await InvalidToken.create({
+                token: req.cookies.jwt,
+                userId: req.user._id,
+                expirationTime: req.accessToken.exp,
+            });
+    
+        }
 
-        res.status(204).send();
+        res.status(200).json({ message: 'Logged out successfully' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: error.message });
+        console.error('Somethings went wrong during logging out:', error);
+        res.status(500).json({ message: 'Logged out UNSUCCESSFULLY!' });
     }
 };
 
-// customer Logout function
-exports.logoutCustomer = async (req, res) => {
-    try {
-        // Usuwanie ciasteczek
-        res.clearCookie('jwt', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Lax',
-            path: '/',
-        });
-
-        res.clearCookie('refreshToken', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Lax',
-            path: '/api/auth/refreshToken',
-        });
-
-        // Usunięcie refresh tokenu z bazy danych
-        await CustomerRefreshToken.deleteMany({ customerId: req.user._id });
-
-        // Dodanie tokenu do tabeli z nieaktualnymi tokenami
-        await CustomerInvalidToken.create({
-            token: req.cookies.jwt,
-            customerId: req.user._id,
-            expirationTime: req.accessToken.exp,
-        });
-
-        res.status(204).send();
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: error.message });
-    }
-};
 
 // Google login configuration
 passport.use(

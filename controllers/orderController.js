@@ -1,4 +1,4 @@
-const { Order } = require('../db/models/Order');
+const Order = require('../db/models/Order');
 
 /**
  * Fetch paginated orders with search and sorting.

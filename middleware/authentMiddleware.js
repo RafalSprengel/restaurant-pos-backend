@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const UserInvalidToken = require('../db/models/UserInvalidToken');
+const InvalidRefreshToken = require('../db/models/InvalidToken');
 
 const authentMiddleware = async (req, res, next) => {
     const accessToken = req.cookies.jwt;
@@ -12,7 +12,7 @@ const authentMiddleware = async (req, res, next) => {
         const decodedAccessToken = jwt.verify(accessToken, process.env.JWT_SECRET);
 
         if (
-            await UserInvalidToken.findOne({
+            await InvalidRefreshToken.findOne({
                 token: accessToken,
                 userId: decodedAccessToken.userId,
             })
@@ -31,7 +31,6 @@ const authentMiddleware = async (req, res, next) => {
         };
         next();
     } catch (err) {
-        console.log('Something went wrong (authentMiddleware.js line 34)');
         if (err instanceof jwt.TokenExpiredError) {
             return res.status(401).json({
                 message: 'Access token expired',

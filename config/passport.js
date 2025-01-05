@@ -3,24 +3,24 @@ const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const bcrypt = require('bcryptjs');
-const { User } = require('../db/models/User'); // Model użytkownika
+const { Customer } = require('../db/models/Customer'); // Model użytkownika
 
 // Local Strategy
-// passport.use(
-//     new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
-//         try {
-//             const user = await User.findOne({ email });
-//             if (!user) return done(null, false, { message: 'Incorrect email or password.' });
+passport.use(
+    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+        try {
+            const customer = await Customer.findOne({ email });
+            if (!customer) return done(null, false, { message: 'Incorrect email or password.' });
 
-//             const isMatch = await bcrypt.compare(password, user.password);
-//             if (!isMatch) return done(null, false, { message: 'Incorrect email or password.' });
+            const isMatch = await bcrypt.compare(password, customer.password);
+            if (!isMatch) return done(null, false, { message: 'Incorrect email or password.' });
 
-//             return done(null, user);
-//         } catch (err) {
-//             return done(err);
-//         }
-//     })
-// );
+            return done(null, customer);
+        } catch (err) {
+            return done(err);
+        }
+    })
+);
 
 // Google Strategy
 passport.use(
@@ -33,16 +33,16 @@ passport.use(
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
-                let user = await User.findOne({ googleId: profile.id });
-                if (!user) {
-                    user = new User({
+                let customer = await Customer.findOne({ googleId: profile.id });
+                if (!customer) {
+                    customer = new Customer({
                         googleId: profile.id,
                         name: profile.displayName,
                         email: profile.emails[0].value,
                     });
-                    await user.save();
+                    await customer.save();
                 }
-                return done(null, user);
+                return done(null, customer);
             } catch (err) {
                 return done(err, false);
             }
@@ -61,16 +61,16 @@ passport.use(
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
-                let user = await User.findOne({ facebookId: profile.id });
-                if (!user) {
-                    user = new User({
+                let customer = await Customer.findOne({ facebookId: profile.id });
+                if (!customer) {
+                    customer = new Customer({
                         facebookId: profile.id,
                         name: profile.displayName,
                         email: profile.emails[0].value,
                     });
-                    await user.save();
+                    await customer.save();
                 }
-                return done(null, user);
+                return done(null, customer);
             } catch (err) {
                 return done(err, false);
             }
@@ -79,12 +79,12 @@ passport.use(
 );
 
 // Serializacja i deserializacja użytkownika
-passport.serializeUser((user, done) => done(null, user.id));
+passport.serializeUser((customer, done) => done(null, customer.id));
 
 passport.deserializeUser(async (id, done) => {
     try {
-        const user = await User.findById(id);
-        done(null, user);
+        const customer = await Customer.findById(id);
+        done(null, customer);
     } catch (err) {
         done(err, null);
     }
