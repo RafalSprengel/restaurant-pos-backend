@@ -1,7 +1,6 @@
 const { database_url } = require('../config.js');
 
 const mongoose = require('mongoose');
-
 mongoose
     .connect(database_url)
     .then(() => {

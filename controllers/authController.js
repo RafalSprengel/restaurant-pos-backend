@@ -4,9 +4,10 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const RefreshToken = require('../db/models/RefreshToken');
-const InvalidToken = require('../db/models/InvalidToken');
 const {Customer} = require('../db/models/Customer');
-const {Staff} = require('../db/models/Staff')
+const {Staff} = require('../db/models/Staff');
+const jwtAccessTokenMaxAge = parseInt(process.env.JWT_ACCESS_TOKEN_MAX_AGE) || 3600;  // default 1h
+const jwtRefreshTokenMaxAge = parseInt(process.env.JWT_REFRESH_TOKEN_MAX_AGE) || 3600 * 24 * 15;  // default 15 days
 
 const generateToken = (user) => {
     const payload = {
@@ -18,23 +19,22 @@ const generateToken = (user) => {
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_TOKEN_EXPIRES_IN,
+        expiresIn: jwtAccessTokenMaxAge, 
     });
 
     const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
-        expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
+        expiresIn: jwtRefreshTokenMaxAge,
     });
 
     return { token, refreshToken }; 
 };
 
-// Sysytem customer registration function
 exports.registerNewCustomer = async (req, res) =>  {
     const { name, surname, email, password } = req.body;
     if (!name || !surname || !email || !password) return res.status(422).json({ error: 'Missing required fields' });
 
     try {
-        if (!process.env.JWT_SECRET || !process.env.JWT_TOKEN_EXPIRES_IN) return res.status(500).json({ error: 'Internal server error' });
+        if (!process.env.JWT_SECRET ) return res.status(500).json({ error: 'no process.env.JWT_SECRET, check .env file' });
 
         let customer = await Customer.findOne({ email });
         if (customer) return res.status(409).json({ error: 'Customer already exists' });
@@ -57,8 +57,7 @@ exports.registerNewCustomer = async (req, res) =>  {
         console.error(err);
         res.status(500).json({ error: 'Error during registration' });
     }
-}
-;
+};
 
 exports.loginCustomer = async (req, res) => {
     const { email, password } = req.body;
@@ -84,7 +83,7 @@ exports.loginCustomer = async (req, res) => {
             httpOnly: true,
             path: '/',
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000, // 1 godzina
+            maxAge: jwtAccessTokenMaxAge * 1000,// in milliseconds
             sameSite: 'Lax',
         });
 
@@ -92,8 +91,8 @@ exports.loginCustomer = async (req, res) => {
             httpOnly: true,
             path: '/api/auth/refresh-token',
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000 * 24 * 15, // 15 dni
-            sameSite: 'Lax',
+           maxAge: jwtRefreshTokenMaxAge *1000,// in milliseconds
+           sameSite: 'Lax',
         });
 
         res.status(200).json({
@@ -109,13 +108,12 @@ exports.loginCustomer = async (req, res) => {
     }
 };
 
-// Sysytem user registration function
 exports.registerNewStaffMember = async (req, res) => {
     const { name, surname, email, role, password } = req.body;
     if (!name || !surname || !email || !password) return res.status(422).json({ error: 'Missing required fields' });
 
     try {
-        if (!process.env.JWT_SECRET || !process.env.JWT_TOKEN_EXPIRES_IN) return res.status(500).json({ error: 'Internal server error' });
+        if (!process.env.JWT_SECRET ) return res.status(500).json({ error: 'no process.env.JWT_SECRET, check .env file' });
 
         let staff = await Staff.findOne({ email });
         if (staff) return res.status(409).json({ error: 'Staff member already exists' });
@@ -140,7 +138,6 @@ exports.registerNewStaffMember = async (req, res) => {
     }
 };
 
-// Local login function
 exports.loginStaff = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(422).json({ error: 'Missing required fields' });
@@ -163,14 +160,14 @@ exports.loginStaff = async (req, res) => {
             httpOnly: true,
             path: '/',
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000, //1h
+            maxAge: jwtAccessTokenMaxAge *1000,// in milliseconds
             sameSite: 'Lax',
         });
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             path: '/api/auth/refresh-token',
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000 * 24 * 15, //15days
+            maxAge: jwtRefreshTokenMaxAge*1000,// in milliseconds
             sameSite: 'Lax',
         });
         res.status(200).json({
@@ -186,41 +183,38 @@ exports.loginStaff = async (req, res) => {
     }
 };
 
-// Refresh token function
 exports.refreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
-
         if (!refreshToken) return res.status(401).json({ error: 'Missing refresh token' });
+        let decodedRefreshToken;
+        try {
+            decodedRefreshToken = jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH);
+        } catch (error) {
+            return res.status(401).json({ message: 'Invalid or expired refresh token' });
+        }
+        const userId = decodedRefreshToken._id;
 
-        // Użycie modułu `jsonwebtoken` bez nadpisywania nazwy
-        const decodedRefreshToken = jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH);
+        if(!(await RefreshToken.findOne({userId, refreshToken}))) return res.status(401).json({message:'refresh token not found in db'})
+        
+        let user = await Customer.findById(userId);
+        if (!user) {
+            user = await Staff.findById(userId);
+        }
 
-        if (!decodedRefreshToken) return res.status(401).json({ error: 'Invalid or expired refresh token' });
+        if (!user) {
+            return res.status(401).json({ error: 'User not found' });
+        }
 
-        const existingToken = await RefreshToken.findOne({
-            refreshToken,
-            userId: decodedRefreshToken.userId,
-        });
+        const { token: newAccessToken, refreshToken: newRefreshToken } = generateToken(user);
 
-        if (!existingToken) return res.status(401).json({ error: 'Invalid refresh token' });
+        await RefreshToken.findOneAndUpdate({ userId }, { refreshToken: newRefreshToken }, { upsert: true, new: true });
 
-        if (!process.env.JWT_SECRET_REFRESH || !process.env.JWT_REFRESH_TOKEN_EXPIRES_IN) return res.status(500).json({ error: 'Internal server error' });
-
-        const newAccessToken = jwt.sign({ userId: decodedRefreshToken.userId }, process.env.JWT_SECRET, {
-            expiresIn: process.env.JWT_TOKEN_EXPIRES_IN,
-        });
-
-        const newRefreshToken = jwt.sign({ userId: decodedRefreshToken.userId }, process.env.JWT_SECRET_REFRESH, {
-            expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
-        });
-
-        await RefreshToken.findOneAndUpdate({ userId: decodedRefreshToken.userId }, { refreshToken: newRefreshToken }, { upsert: true, new: true });
         res.cookie('jwt', newAccessToken, {
             httpOnly: true,
             path: '/',
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000, //1h
+            maxAge: jwtAccessTokenMaxAge*1000, // in milliseconds
             sameSite: 'Lax',
         });
 
@@ -228,25 +222,21 @@ exports.refreshToken = async (req, res) => {
             httpOnly: true,
             path: '/api/auth/refresh-token',
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000 * 24 * 15, //15days
+            maxAge: jwtRefreshTokenMaxAge*1000,// in milliseconds
             sameSite: 'Lax',
         });
+
         res.status(200).json({ message: 'Jwt and refreshToken refreshed' });
     } catch (error) {
-        if (error instanceof jwt.TokenExpiredError || error instanceof jwt.JsonWebTokenError) {
-            return res.status(401).json({ message: 'Refresh token invalid or expired' });
-        }
-
+        // Obsługa innych błędów
         return res.status(500).json({ message: error.message });
     }
 };
 
-// user Logout function
 exports.logout = async (req, res) => {
     try {
         const currentToken = req.cookies.jwt;
 
-        // Clear cookies
         res.clearCookie('jwt', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -262,16 +252,7 @@ exports.logout = async (req, res) => {
         });
 
         if (req.user && req.user._id && currentToken) {
-            // Remove refresh tokens from valid tokens collection
             await RefreshToken.deleteMany({ userId: req.user._id });
-
-            // Add both tokens to invalid tokens collection
-            await InvalidToken.create({
-                token: req.cookies.jwt,
-                userId: req.user._id,
-                expirationTime: req.accessToken.exp,
-            });
-    
         }
 
         res.status(200).json({ message: 'Logged out successfully' });
@@ -281,8 +262,6 @@ exports.logout = async (req, res) => {
     }
 };
 
-
-// Google login configuration
 passport.use(
     new GoogleStrategy(
         {
@@ -314,7 +293,6 @@ exports.googleCallback = (req, res) => {
     res.redirect(`/auth/success?token=${token}`);
 };
 
-// Facebook login configuration
 passport.use(
     new FacebookStrategy(
         {

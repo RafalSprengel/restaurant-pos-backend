@@ -6,10 +6,13 @@ exports.session = async (req, res) => {
     if (!req.user || !req.user._id) {
         return res.status(401).json({ error: 'User not authenticated' });
     }
+    
     res.json({
         _id: req.user._id,
         name: req.user.name,
-        role: req.user.role
+        surname:req.user.surname,
+        email:req.user.email,
+        role: req.user.role,
     });
 };
 

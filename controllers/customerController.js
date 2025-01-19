@@ -9,6 +9,8 @@ exports.session = async (req, res) => {
     res.json({
         _id: req.user._id,
         name: req.user.name,
+        surname:req.user.surname,
+        email:req.user.email,
     });
 };
 

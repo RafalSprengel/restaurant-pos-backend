@@ -1,7 +1,7 @@
 const {Staff} = require('../db/models/Staff');
-
 function authorize(roles = []) {
     return async function (req, res, next) {
+
         try {
             const staff = await Staff.findById(req.user._id);
             if (!staff || !roles.includes(staff.role)) {

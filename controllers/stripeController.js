@@ -5,7 +5,6 @@ const Order = require('../db/models/Order');
 
 exports.createCheckoutSession = async (req, res) => {
     try {
-        // Check if customer exists in database
         let customer = null;
         const customerExists = await Customer.findOne({
             email: req.body.customer.email,
@@ -20,7 +19,6 @@ exports.createCheckoutSession = async (req, res) => {
             });
             await customer.save();
         } else {
-            // Update customer's name and surname if email exists
             customer = await Customer.findOneAndUpdate(
                 { email: req.body.customer.email },
                 {
@@ -35,7 +33,6 @@ exports.createCheckoutSession = async (req, res) => {
             _id: { $in: productIds },
         }).populate('category');
 
-        // Add quantity to each product
         const productsWithQuantity = products.map((el) => {
             const item = req.body.items.find((item) => item.id === el._id.toString());
             const productObject = el.toObject();
@@ -43,7 +40,6 @@ exports.createCheckoutSession = async (req, res) => {
             return productObject;
         });
 
-        // Create new order in the database
         const order = new Order({
             customer: {
                 customerNumber: customer.customerNumber,
@@ -74,7 +70,6 @@ exports.createCheckoutSession = async (req, res) => {
 
         await order.save();
 
-        // Create Stripe checkout session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'blik', 'p24'],
             line_items: productsWithQuantity.map((product) => ({
@@ -99,9 +94,9 @@ exports.createCheckoutSession = async (req, res) => {
             },
         });
 
-        res.json({ url: session.url }); // Return the session URL
+        res.json({ url: session.url });
     } catch (e) {
-        res.status(500).json({ error: e.message }); // Handle errors
+        res.status(500).json({ error: e.message }); 
     }
 };
 
@@ -125,22 +120,19 @@ exports.webhook = async (req, res) => {
     let event;
 
     try {
-        // Verify the webhook signature
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
-        return res.status(400).end(); // Return error if verification fails
+        return res.status(400).end();
     }
 
     try {
         switch (event.type) {
             case 'payment_intent.succeeded':
-                // Handle successful payment
                 const paymentIntent = event.data.object;
                 const orderId = paymentIntent.metadata.orderId;
                 const order = await Order.findById(orderId);
 
                 if (order) {
-                    // Update order status
                     order.status = 'completed';
                     order.isPaid = true;
                     order.paidAt = new Date();
@@ -152,7 +144,6 @@ exports.webhook = async (req, res) => {
                 break;
 
             case 'payment_intent.payment_failed':
-                // Handle failed payment
                 const failedIntent = event.data.object;
                 const failedOrderId = failedIntent.metadata.orderId;
                 const failedOrder = await Order.findById(failedOrderId);
@@ -165,7 +156,6 @@ exports.webhook = async (req, res) => {
                 break;
 
             case 'payment_intent.canceled':
-                // Handle canceled payment
                 const canceledIntent = event.data.object;
                 const canceledOrderId = canceledIntent.metadata.orderId;
                 const canceledOrder = await Order.findById(canceledOrderId);
@@ -176,15 +166,11 @@ exports.webhook = async (req, res) => {
                     await canceledOrder.save();
                 }
                 break;
-
-            default:
-                // Handle unhandled event types
-                break;
         }
     } catch (error) {
         console.error('Webhook error:', error);
         return res.status(500).json({ error: 'Webhook processing failed' });
     }
 
-    res.sendStatus(200); // Acknowledge receipt of the event
+    res.sendStatus(200);
 };
