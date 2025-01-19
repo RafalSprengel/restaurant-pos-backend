@@ -5,10 +5,11 @@ const productController = require('../../controllers/productController');
 
 const router = express.Router();
 
-router.get('/getProducts', productController.getProducts);
-router.get('/getSingleProduct/:id', productController.getSingleProduct);
-router.post('/addProduct', authentMiddleware, authorize(['moderator', 'admin']), productController.addProduct);
-router.delete('/deleteProduct/:id', authentMiddleware, authorize(['moderator', 'admin']), productController.deleteProduct);
-router.put('/updateProduct/:id', authentMiddleware, authorize(['moderator', 'admin']), productController.updateProduct);
+router.get('/', productController.getProducts);
+router.get('/:id', productController.getSingleProduct);
+router.post('/', authentMiddleware, authorize(['moderator', 'admin']), productController.addProduct);
+router.put('/:id', authentMiddleware, authorize(['moderator', 'admin']), productController.updateProduct);
+router.delete('/:id', authentMiddleware, authorize(['moderator', 'admin']), productController.deleteProduct);
+
 
 module.exports = router;

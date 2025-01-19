@@ -45,7 +45,7 @@ const staffSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-});
+}, { strict: 'throw' });
 
 staffSchema.plugin(timestamps);
 

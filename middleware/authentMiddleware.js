@@ -12,13 +12,6 @@ const authentMiddleware = async (req, res, next) => {
         if (!decodedAccessToken) {
             return res.status(401).json({ message: 'Invalid token structure' });
         }
-
-       // req.accessToken = { value: accessToken, exp: decodedAccessToken.exp };
-        // req.user = {
-        //     _id: decodedAccessToken._id,
-        //     name: decodedAccessToken.name,
-        //     role: decodedAccessToken.role,
-        // };
         req.user= decodedAccessToken;
         next();
         

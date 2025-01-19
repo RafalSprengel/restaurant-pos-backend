@@ -29,7 +29,7 @@ const generateToken = (user) => {
     return { token, refreshToken }; 
 };
 
-exports.registerNewCustomer = async (req, res) =>  {
+exports.registerCustomer = async (req, res) =>  {
     const { name, surname, email, password } = req.body;
     if (!name || !surname || !email || !password) return res.status(422).json({ error: 'Missing required fields' });
 
@@ -108,7 +108,7 @@ exports.loginCustomer = async (req, res) => {
     }
 };
 
-exports.registerNewStaffMember = async (req, res) => {
+exports.registerMgmt = async (req, res) => {
     const { name, surname, email, role, password } = req.body;
     if (!name || !surname || !email || !password) return res.status(422).json({ error: 'Missing required fields' });
 
@@ -138,7 +138,7 @@ exports.registerNewStaffMember = async (req, res) => {
     }
 };
 
-exports.loginStaff = async (req, res) => {
+exports.loginMgmt = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(422).json({ error: 'Missing required fields' });
 
@@ -231,6 +231,20 @@ exports.refreshToken = async (req, res) => {
         // Obsługa innych błędów
         return res.status(500).json({ message: error.message });
     }
+};
+
+exports.session = async (req, res) => {
+    if (!req.user || !req.user._id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    res.json({
+        _id: req.user._id,
+        name: req.user.name,
+        surname:req.user.surname,
+        email:req.user.email,
+        role:req.user.role,
+    });
 };
 
 exports.logout = async (req, res) => {

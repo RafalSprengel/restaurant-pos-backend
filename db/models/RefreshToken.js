@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 
 const refreshTokenMaxAge = parseInt(process.env.JWT_REFRESH_TOKEN_MAX_AGE)*1000 || 86400000; // in milliseconds
-const errorqq = new Error(); const stack = errorqq.stack.split('\n')[1];
-console.log('## refreshTokenMaxAge: ', refreshTokenMaxAge,' ', stack)
 
 const refreshTokenSchema = new mongoose.Schema(
     {

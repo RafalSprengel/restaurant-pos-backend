@@ -14,6 +14,10 @@ const customerSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    phone:{
+        type: String,
+        requred: false
+    },
     email: {
         type: String,
         required: true,
@@ -27,8 +31,8 @@ const customerSchema = new mongoose.Schema({
         required: function() {
             return this.isRegistered === true;
         },
-    },
-});
+    }
+}, { strict: 'throw' });
 
 customerSchema.plugin(timestamps); //add timestamps to mongoose
 

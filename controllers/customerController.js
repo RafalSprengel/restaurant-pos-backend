@@ -1,46 +1,92 @@
 const {Customer}  = require('../db/models/Customer');
 const  Order  = require('../db/models/Order');
 
-exports.session = async (req, res) => {
-    if (!req.user || !req.user._id) {
-        return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    res.json({
-        _id: req.user._id,
-        name: req.user.name,
-        surname:req.user.surname,
-        email:req.user.email,
-    });
-};
-
 exports.getCustomers = async (req, res) => {
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
+    const searchString = req.query.search || '';
+    const sortBy = req.query.sortBy || 'name';
+    const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
+
+    const search = searchString ? { 
+        $or: [
+            { name: { $regex: searchString, $options: 'i' } },
+            { surname: { $regex: searchString, $options: 'i' } },
+            { email: { $regex: searchString, $options: 'i' } },
+            ...(isNaN(parseInt(searchString)) ? [] : [{ customerNumber: { $eq: parseInt(searchString) } }])
+        ]
+    } : {};
+
     try {
-        const customers = await Customer.find().sort({ customerNumber: 1 });
+        const filters = { ...search };
 
-        if (customers.length > 0) {
-            const customersWithOrders = await Promise.all(
-                customers.map(async (customer) => {
-                    const amountOfOrders = await Order.countDocuments({
-                        'customer._id': customer._id,
-                    });
-                    return {
-                        ...customer.toObject(),
-                        amountOfOrders,
-                    };
-                })
-            );
+        // Pobieranie klientów z paginacją i sortowaniem
+        const customers = await Customer.find(filters)
+            .sort({ [sortBy]: sortOrder })
+            .skip(offset)
+            .limit(limit);
 
-            return res.status(200).json(customersWithOrders);
-        } else {
-            return res.status(404).json({ error: 'Customers not found' });
-        }
+        const totalCustomers = await Customer.countDocuments(filters);
+
+        const customersWithOrders = await Promise.all(
+            customers.map(async (customer) => {
+                const amountOfOrders = await Order.countDocuments({
+                    'customer._id': customer._id,
+                });
+                return {
+                    ...customer.toObject(),
+                    amountOfOrders,
+                };
+            })
+        );
+
+        return res.status(200).json({
+            currentPage: page,
+            totalPages: Math.ceil(totalCustomers / limit),
+            customers: customersWithOrders,
+        });
     } catch (err) {
         console.error('ERROR fetching customers: ', err);
         return res.status(500).json({ error: 'Error fetching customers' });
     }
 };
 
+
+exports.getSingleCustomer = async (req, res) => {
+    try {
+        const product = await Customer.findById(req.params.id);
+        if (product) {
+            return res.status(200).json(product);
+        } else {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+    } catch (err) {
+        console.error('ERROR fetching customer: ', err);
+        return res.status(500).json({ error: 'Error fetching customer' });
+    }
+};
+
+exports.updateCustomer = async (req,res)=>{
+    const {id}= req.params;
+    const {name, surname, email, phone, password} = req.body;
+
+    try{
+        const updatedCustomer = await Customer.findByIdAndUpdate(id,
+            {
+                $set:{
+                    name, surname, email, phone, password
+                },
+            },
+            {new: true}
+        )
+        if(updatedCustomer) return res.status(200).json(({message: 'Customer updated successfully'}))
+            else return res.status(404).json('Customer with this id not found')
+    }catch(e){
+        console.error(e.message);
+        res.status(500).json({error:'Error, customer NOT updated, details: '+e.message})
+    }
+}
 
 exports.deleteCustomer = async (req, res) => {
     const { id } = req.params;
@@ -56,3 +102,5 @@ exports.deleteCustomer = async (req, res) => {
         return res.status(500).json({ error: 'Error deleting customer' });
     }
 };
+
+

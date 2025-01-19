@@ -1,8 +1,5 @@
 const Order = require('../db/models/Order');
 
-/**
- * Fetch paginated orders with search and sorting.
- */
 exports.getOrders = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
@@ -12,19 +9,21 @@ exports.getOrders = async (req, res) => {
     const sortOrder = req.query.sortOrder === 'desc' ? 1 : -1;
 
     const search = searchString
-        ? {
-              $or: [
-                  { 'customer.name': { $regex: searchString, $options: 'i' } },
-                  { 'customer.surname': { $regex: searchString, $options: 'i' } },
-                  { 'customer.email': { $regex: searchString, $options: 'i' } },
-                  { 'product.name': { $regex: searchString, $options: 'i' } },
-                  { orderType: { $regex: searchString, $options: 'i' } },
-                  { orderNumber: { $regex: searchString, $options: 'i' } },
-                  { note: { $regex: searchString, $options: 'i' } },
-                  { status: { $regex: searchString, $options: 'i' } },
-              ],
-          }
-        : {};
+    ? {
+        $or: [
+            { 'customer.name': { $regex: searchString, $options: 'i' } },
+            { 'customer.surname': { $regex: searchString, $options: 'i' } },
+            { 'customer.email': { $regex: searchString, $options: 'i' } },
+            { 'product.name': { $regex: searchString, $options: 'i' } },
+            { 'deliveryAddress.city': { $regex: searchString, $options: 'i' } },
+            { orderType: { $regex: searchString, $options: 'i' } },
+            ...(isNaN(parseInt(searchString)) ? [] : [{ orderNumber: { $eq: parseInt(searchString) } }]),
+            { note: { $regex: searchString, $options: 'i' } },
+            { status: { $regex: searchString, $options: 'i' } },
+        ],
+    }
+    : {};
+
 
     try {
         const orders = await Order.find(search)
@@ -51,9 +50,6 @@ exports.getOrders = async (req, res) => {
     }
 };
 
-/**
- * Fetch a single order by ID.
- */
 exports.getSingleOrder = async (req, res) => {
     const { id } = req.params;
     try {
@@ -69,9 +65,6 @@ exports.getSingleOrder = async (req, res) => {
     }
 };
 
-/**
- * Delete an order by ID.
- */
 exports.deleteOrder = async (req, res) => {
     const { id } = req.params;
     try {

@@ -61,7 +61,7 @@ const orderSchema = new mongoose.Schema({
     paymentFailureReason: {
         type: String,
     },
-});
+},{ strict: 'throw' });
 
 orderSchema.plugin(timestamps); //add timestamps to mongoose
 

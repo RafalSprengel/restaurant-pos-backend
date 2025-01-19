@@ -31,7 +31,7 @@ const productSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
-        ingridiens: [{ type: String }],
+        ingredients: [{ type: String }],
         isVegetarian: {
             type: Boolean,
             default: false,

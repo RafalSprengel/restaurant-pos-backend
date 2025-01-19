@@ -5,12 +5,13 @@ const authController = require('../../controllers/authController');
 
 const router = express.Router();
 
-router.post('/register-new-customer', authController.registerNewCustomer);
-router.post('/login-customer', authController.loginCustomer);
+router.post('/register/customer', authController.registerCustomer);
+router.post('/login/customer', authController.loginCustomer);
 
-router.post('/register-new-staff-member', authController.registerNewStaffMember);
-router.post('/login-staff', authController.loginStaff);
+router.post('/register/mgmt', authController.registerMgmt);
+router.post('/login/mgmt', authController.loginMgmt);
 
+router.get('/session', authentMiddleware, authController.session);
 router.post('/logout', authentMiddleware, authController.logout);
 
 router.post('/refresh-token', authController.refreshToken);
