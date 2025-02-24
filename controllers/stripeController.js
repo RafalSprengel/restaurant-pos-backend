@@ -116,6 +116,7 @@ exports.getSessionStatus = async (req, res) => {
 };
 
 exports.webhook = async (req, res) => {
+    console.log('webhook starting...')
     const sig = req.headers['stripe-signature'];
     let event;
 
