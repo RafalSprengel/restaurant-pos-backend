@@ -4,29 +4,11 @@ const Product = require('../db/models/Product');
 const Order = require('../db/models/Order');
 
 exports.createCheckoutSession = async (req, res) => {
+    // zmienic w kodzie że jeżeli jest flaga isGuest=true to dodajemy do zamówienia dane z pól formularza do pozycji byer i wpisujemy dane, natomiast w user wpisujemy null
+    // jeżeli flaga jest isGuest=false to dodajemy do zamówienia buyer dane z formularza a w pole user email wpisujemy email
+    //w takiej kombinacji mozna przefiltrowac zamówienia od zarejestrowanych użytkowników i wyświetlić konta tych uzytkowników z uzyciem maila
+    
     try {
-        let customer = null;
-        const customerExists = await Customer.findOne({
-            email: req.body.customer.email,
-        });
-
-        if (!customerExists) {
-            customer = new Customer({
-                name: req.body.customer.name,
-                surname: req.body.customer.surname,
-                email: req.body.customer.email.toLowerCase(),
-                isRegistered: false,
-            });
-            await customer.save();
-        } else {
-            customer = await Customer.findOneAndUpdate(
-                { email: req.body.customer.email },
-                {
-                    name: req.body.customer.name,
-                    surname: req.body.customer.surname,
-                }
-            );
-        }
 
         const productIds = req.body.items.map((item) => item.id);
         const products = await Product.find({
@@ -39,15 +21,15 @@ exports.createCheckoutSession = async (req, res) => {
             productObject.quantity = item ? item.quantity : 0; // Default quantity to 0 if item not found
             return productObject;
         });
-
+console.log(req.body)
         const order = new Order({
-            customer: {
-                customerNumber: customer.customerNumber,
-                name: customer.name,
-                surname: customer.surname,
-                email: customer.email,
-                isRegistered: customer.isRegistered,
-                _id: customer._id,
+            isGuest: req.body.isGuest,
+            customerId: req.body.isGuest ? null : req.body.customerId,
+            purchaserDetails:{
+                firstName: req.body.customer.name,
+                surname: req.body.customer.surname,
+                phone: req.body.customer.phone,
+                email: req.body.customer.email
             },
             products: productsWithQuantity.map((product) => ({
                 productId: product._id,
@@ -67,8 +49,22 @@ exports.createCheckoutSession = async (req, res) => {
             status: 'new',
             isPaid: false,
         });
+        const dane = { parametr1: [{x: 1, y: 2}] };
+console.log(dane);
 
         await order.save();
+// const szukane= productsWithQuantity.map((product) => ({
+//     price_data: {
+//         currency: 'pln',
+//         product_data: {
+//             name: product.name,
+//         },
+//         unit_amount: Math.round(product.price * 100), // Convert price to cents
+//     },
+//     quantity: product.quantity,
+// }));
+// console.log("szukane : ",szukane)
+
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'blik', 'p24'],
@@ -88,7 +84,7 @@ exports.createCheckoutSession = async (req, res) => {
             metadata: {
                 orderId: order._id.toString(),
             },
-            customer_email: customer.email,
+            customer_email: req.body.customer.email,
             payment_intent_data: {
                 metadata: { orderId: order._id.toString() },
             },
@@ -96,6 +92,7 @@ exports.createCheckoutSession = async (req, res) => {
 
         res.json({ url: session.url });
     } catch (e) {
+        console.error("Error occurred: ", e);
         res.status(500).json({ error: e.message }); 
     }
 };
@@ -116,7 +113,6 @@ exports.getSessionStatus = async (req, res) => {
 };
 
 exports.webhook = async (req, res) => {
-    console.log('webhook starting...')
     const sig = req.headers['stripe-signature'];
     let event;
 

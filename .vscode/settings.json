@@ -1,0 +1,4 @@
+{
+    "editor.gotoLocation.multipleDefinitions": "goto",
+    "editor.gotoLocation.multipleDeclarations": "goto"
+}

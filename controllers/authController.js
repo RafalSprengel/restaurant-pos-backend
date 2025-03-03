@@ -90,7 +90,7 @@ exports.loginCustomer = async (req, res) => {
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             path: '/api/auth/refresh-token',
-            secure: process.env.NODE_ENV === 'production',
+            secure:  process.env.NODE_ENV === 'production',
            maxAge: jwtRefreshTokenMaxAge *1000,// in milliseconds
            sameSite: 'Lax',
         });

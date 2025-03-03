@@ -1,4 +1,6 @@
-require('dotenv').config();
+require('dotenv').config({ path: '/var/www/api.justcode.uk/.env' });
+//console.log(process.env.GOOGLE_CLIENT_ID);
+//console.log(process.env.GOOGLE_CLIENT_SECRET);
 const logger = require('./utils/logger');
 require('./db/mongoose.js');
 const { port } = require('./config.js');
@@ -19,7 +21,7 @@ app.use(cookieParser());
 // Middleware to parse incoming JSON request bodies
 app.use(express.json());
 
-console.log('działa 7');
+console.log('działa 3');
 app.use(passport.initialize());
 
 app.use('/v1', apiRoutes_v1);

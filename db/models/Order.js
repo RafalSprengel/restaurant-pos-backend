@@ -19,15 +19,39 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         unique: true,
     },
-    customer: customerSchema,
+    isGuest: {
+        type: Boolean, 
+        required: true,
+    },
+    customerId: { 
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Customer',
+        required: function () {
+            return !this.isGuest;
+        },
+    },
+    purchaserDetails: {
+        firstName: { type: String, required: true },
+        surname: { type: String, required: true },
+        phone: { type: String, required: true },
+        email: { type: String, required: true },
+    },
     products: [orderItemSchema],
     totalPrice: {
         type: Number,
         required: true,
     },
     deliveryAddress: {
-        type: Object,
-        required: false,
+        type: new mongoose.Schema({
+            city: { type: String, required: function() { return this.orderType === 'delivery'; } },
+            street: { type: String, required: function() { return this.orderType === 'delivery'; } },
+            houseNo: { type: String, required: function() { return this.orderType === 'delivery'; } },
+            flatNo: { type: String, default: '' },
+            floor: { type: String, default: '' }
+        }),
+        required: function() {
+            return this.orderType === 'delivery'; // całe pole deliveryAddress jest wymagane tylko wtedy, gdy orderType to "delivery"
+        }
     },
     orderType: {
         type: String,
@@ -62,6 +86,7 @@ const orderSchema = new mongoose.Schema({
         type: String,
     },
 },{ strict: 'throw' });
+
 
 orderSchema.plugin(timestamps); //add timestamps to mongoose
 
