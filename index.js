@@ -1,8 +1,9 @@
-require('dotenv').config({ path: '/var/www/api.justcode.uk/.env' });
+require('dotenv').config();
 //console.log(process.env.GOOGLE_CLIENT_ID);
 //console.log(process.env.GOOGLE_CLIENT_SECRET);
 const logger = require('./utils/logger');
 require('./db/mongoose.js');
+const cors = require('cors');
 const { port } = require('./config.js');
 const express = require('express');
 const passport = require('./config/passport');
@@ -14,16 +15,28 @@ const originalConsoleError = console.error;
 console.error = (...args) => { 
     logger.error(args); 
     originalConsoleError(...args); 
-  };
+};
+
+if (process.env.NODE_ENV === 'development') {
+    app.use(
+        cors({
+            origin: 'http://localhost:3000', 
+            methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+            allowedHeaders: ['Content-Type', 'Authorization'], 
+            credentials: true, 
+        })
+    );
+}
 
 app.use(cookieParser());
 
-// Middleware to parse incoming JSON request bodies
 app.use(express.json());
 
 console.log('działa 3');
 app.use(passport.initialize());
-
+app.get('/', (req, res) => {
+    res.status(200).send('Welcome to the Restaurant API');
+});
 app.use('/v1', apiRoutes_v1);
 
 app.use('/uploads', express.static('uploads'));
