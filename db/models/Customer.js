@@ -5,6 +5,7 @@ const timestamps = require('mongoose-timestamp');
 const customerSchema = new mongoose.Schema({
     customerNumber: {
         type: Number,
+        unique: true, // Zapewnia unikalność numeru klienta
     },
     name: {
         type: String,
@@ -12,32 +13,55 @@ const customerSchema = new mongoose.Schema({
     },
     surname: {
         type: String,
-        required: true,
+        default: '',
     },
-    phone:{
+    phone: {
         type: String,
-        requred: false
+        default: '',
     },
     email: {
         type: String,
         required: true,
+        unique: true, // Zapobiega duplikatom e-maili
     },
-    isRegistered: {
-        type: Boolean,
-        default: false,
+    address: {
+        city: {
+            type: String,
+            default: '',
+        },
+        street: {
+            type: String,
+            default: '',
+        },
+        houseNo: {
+            type: String,
+            default: '',
+        },
+        flatNo: {
+            type: String,
+            default: '',
+        },
     },
     password: {
         type: String,
         required: function() {
-            return this.isRegistered === true;
+            return !this.googleId && !this.facebookId;
         },
-    }
+    },
+    googleId: {
+        type: String
+    },
+    facebookId: {
+        type: String
+    },
 }, { strict: 'throw' });
 
-customerSchema.plugin(timestamps); //add timestamps to mongoose
+// Dodanie auto-increment do pola customerNumber
+customerSchema.plugin(AutoIncrement, { inc_field: 'customerNumber' });
 
-customerSchema.plugin(AutoIncrement, { inc_field: 'customerNumber' }); //add autoincrement to mongoose
+customerSchema.plugin(timestamps);
 
 const Customer = mongoose.model('Customer', customerSchema);
 
-module.exports = { Customer, customerSchema };
+module.exports = Customer;
+

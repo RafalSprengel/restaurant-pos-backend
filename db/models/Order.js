@@ -12,7 +12,7 @@ const orderItemSchema = new mongoose.Schema({
     ingredients: [{ type: String }],
     isVegetarian: { type: Boolean, required: true },
     isGlutenFree: { type: Boolean, required: true },
-});
+},{ _id: false });
 
 const orderSchema = new mongoose.Schema({
     orderNumber: {
@@ -48,7 +48,7 @@ const orderSchema = new mongoose.Schema({
             houseNo: { type: String, required: function() { return this.orderType === 'delivery'; } },
             flatNo: { type: String, default: '' },
             floor: { type: String, default: '' }
-        }),
+        },{ _id: false }),
         required: function() {
             return this.orderType === 'delivery'; // całe pole deliveryAddress jest wymagane tylko wtedy, gdy orderType to "delivery"
         }

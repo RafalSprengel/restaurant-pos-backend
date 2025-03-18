@@ -1,5 +1,38 @@
 const Order = require('../db/models/Order');
 
+exports.getCustomerOrders = async (req, res) => {
+    
+    const { user } = req;
+    try {
+        const orders = await Order.find({ customerId: user._id });
+        if (orders) {
+            return res.status(200).json(orders);
+        } else {
+            return res.status(404).json({ error: 'Orders not found' });
+        }
+    } catch (e) {
+        console.log('ERROR fetching orders: ', e);
+        return res.status(500).json({ error: e.message });
+    }
+}
+
+exports.deleteCustomerOrder = async (req, res) => {
+    const { id } = req.params;
+    const { user } = req;
+    try {
+        const deletedOrder = await Order.findOneAndDelete({ _id: id, customerId: user._id });
+        if (deletedOrder) {
+            return res.status(200).json({ message: 'Order deleted successfully' });
+        } else {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+    }
+    catch (err) {
+        console.error('ERROR deleting order: ', err);
+        return res.status(500).json({ error: 'Error deleting order' });
+    }
+}
+
 exports.getOrders = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
@@ -31,7 +64,6 @@ exports.getOrders = async (req, res) => {
             .collation({ locale: 'en', strength: 2 })
             .skip(offset)
             .limit(limit)
-            .populate('customer', 'name surname');
 
         const totalOrders = await Order.countDocuments(search);
 

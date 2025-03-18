@@ -1,4 +1,6 @@
 {
     "editor.gotoLocation.multipleDefinitions": "goto",
-    "editor.gotoLocation.multipleDeclarations": "goto"
+    "editor.gotoLocation.multipleDeclarations": "goto",
+    "editor.acceptSuggestionOnCommitCharacter": false,
+    "editor.acceptSuggestionOnEnter": "off"
 }

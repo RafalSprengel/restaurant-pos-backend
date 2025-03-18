@@ -1,5 +1,46 @@
-const {Customer}  = require('../db/models/Customer');
+const Customer  = require('../db/models/Customer');
 const  Order  = require('../db/models/Order');
+
+//==========  Customer panel  ======
+
+exports.getCustomerDetails  = async (req, res) => {
+    try {
+        const customer = await Customer.findById(req.user._id);
+        if (customer) {
+            return res.status(200).json(customer);
+        } else {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+    }
+    catch (err) {
+        console.error('ERROR fetching customer: ', err);
+        return res.status(500).json({ error: 'Error fetching customer' });
+    }
+};
+
+exports.updateCustomerDetails = async (req, res) => {
+    const { name, surname, email, phone, password, address } = req.body;
+    try {
+        const updatedCustomer = await Customer.findByIdAndUpdate(req.user._id, {
+            $set: {
+                name, surname, email, phone, password, address
+            },
+        }, { new: true });
+        if (updatedCustomer) {
+            return res.status(200).json({ message: 'Customer updated successfully' });
+        } else {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+    }
+    catch (err) {
+        console.error('ERROR updating customer: ', err);
+        return res.status(500).json({ error: 'Error updating customer' });
+    }
+};
+
+
+
+//=========  Admin panel  =========
 
 exports.getCustomers = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
@@ -21,7 +62,6 @@ exports.getCustomers = async (req, res) => {
     try {
         const filters = { ...search };
 
-        // Pobieranie klientów z paginacją i sortowaniem
         const customers = await Customer.find(filters)
             .sort({ [sortBy]: sortOrder })
             .skip(offset)

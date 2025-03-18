@@ -1,8 +1,9 @@
 const jwt = require('jsonwebtoken');
 
 const authentMiddleware = async (req, res, next) => {
-    const accessToken = req.cookies.jwt;
     
+    const accessToken = req.cookies.jwt;
+
     if (!accessToken) {
         return res.status(401).json({ error: 'No accessToken found!' });
     }

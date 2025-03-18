@@ -4,7 +4,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const RefreshToken = require('../db/models/RefreshToken');
-const {Customer} = require('../db/models/Customer');
+const Customer = require('../db/models/Customer');
 const {Staff} = require('../db/models/Staff');
 const jwtAccessTokenMaxAge = parseInt(process.env.JWT_ACCESS_TOKEN_MAX_AGE) || 3600;  // default 1h
 const jwtRefreshTokenMaxAge = parseInt(process.env.JWT_REFRESH_TOKEN_MAX_AGE) || 3600 * 24 * 15;  // default 15 days
@@ -44,7 +44,6 @@ exports.registerCustomer = async (req, res) =>  {
             name,
             surname,
             email,
-            isRegistered: true,
             password: hashedPassword,
         });
 
@@ -89,7 +88,7 @@ exports.loginCustomer = async (req, res) => {
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            path: '/api/auth/refresh-token',
+            path: '/v1/auth/refresh-token',
             secure:  process.env.NODE_ENV === 'production',
            maxAge: jwtRefreshTokenMaxAge *1000,// in milliseconds
            sameSite: 'Lax',
@@ -165,7 +164,7 @@ exports.loginMgmt = async (req, res) => {
         });
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            path: '/api/auth/refresh-token',
+            path: '/v1/auth/refresh-token',
             secure: process.env.NODE_ENV === 'production',
             maxAge: jwtRefreshTokenMaxAge*1000,// in milliseconds
             sameSite: 'Lax',
@@ -220,7 +219,7 @@ exports.refreshToken = async (req, res) => {
 
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
-            path: '/api/auth/refresh-token',
+            path: '/v1/auth/refresh-token',
             secure: process.env.NODE_ENV === 'production',
             maxAge: jwtRefreshTokenMaxAge*1000,// in milliseconds
             sameSite: 'Lax',
@@ -262,7 +261,7 @@ exports.logout = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Lax',
-            path: '/api/auth/refresh-token',
+            path: '/v1/auth/refresh-token',
         });
 
         if (req.user && req.user._id && currentToken) {
@@ -281,14 +280,15 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: '/auth/google/callback',
+            callbackURL: '/v1/auth/google/callback'
         },
         async (accessToken, refreshToken, profile, done) => {
-            let user = await User.findOne({ googleId: profile.id });
+            let user = await Customer.findOne({ googleId: profile.id });
             if (!user) {
-                user = new User({
+                user = new Customer({
                     googleId: profile.id,
                     name: profile.displayName,
+                    surname: profile.name.familyName, 
                     email: profile.emails[0].value,
                 });
                 await user.save();
@@ -304,23 +304,43 @@ exports.googleAuth = passport.authenticate('google', {
 
 exports.googleCallback = (req, res) => {
     const token = generateToken(req.user);
-    res.redirect(`/auth/success?token=${token}`);
+    
+    res.cookie('jwt', token.token, {
+        httpOnly: true, 
+        path: '/',
+        secure: process.env.NODE_ENV === 'production', 
+        maxAge: jwtAccessTokenMaxAge * 1000,// in milliseconds
+        sameSite: 'Lax',
+    });
+
+    res.cookie('refreshToken', token.refreshToken, {
+        httpOnly: true,
+        path: '/v1/auth/refresh-token',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: jwtRefreshTokenMaxAge *1000,// in milliseconds
+        sameSite: 'Lax',
+    });
+
+    const origin = req.get('Origin') || 'http://localhost:3000';
+    res.redirect(`${origin}/customer`);
 };
+
 
 passport.use(
     new FacebookStrategy(
         {
             clientID: process.env.FACEBOOK_CLIENT_ID,
             clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-            callbackURL: '/auth/facebook/callback',
+            callbackURL: '/v1/auth/facebook/callback',
             profileFields: ['id', 'displayName', 'emails'],
         },
         async (accessToken, refreshToken, profile, done) => {
-            let user = await User.findOne({ facebookId: profile.id });
+            let user = await Customer.findOne({ facebookId: profile.id });
             if (!user) {
-                user = new User({
+                user = new Customer({
                     facebookId: profile.id,
                     name: profile.displayName,
+                    surname: profile.name.familyName || '',
                     email: profile.emails[0].value,
                 });
                 await user.save();
@@ -330,8 +350,27 @@ passport.use(
     )
 );
 
-exports.facebookAuth = passport.authenticate('facebook', { scope: ['email'] });
+exports.facebookAuth = passport.authenticate('facebook', { scope: ['email', 'public_profile'] });
+
 exports.facebookCallback = (req, res) => {
     const token = generateToken(req.user);
-    res.redirect(`/auth/success?token=${token}`);
+    
+    res.cookie('jwt', token.token, {
+        httpOnly: true, 
+        path: '/',
+        secure: process.env.NODE_ENV === 'production', 
+        maxAge: jwtAccessTokenMaxAge * 1000,// in milliseconds
+        sameSite: 'Lax',
+    });
+
+    res.cookie('refreshToken', token.refreshToken, {
+        httpOnly: true,
+        path: '/v1/auth/refresh-token',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: jwtRefreshTokenMaxAge *1000,// in milliseconds
+        sameSite: 'Lax',
+    });
+
+    const origin = req.get('Origin') || 'http://localhost:3000';
+    res.redirect(`${origin}/customer`);
 };

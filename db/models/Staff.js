@@ -25,25 +25,10 @@ const staffSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
-    googleId: {
-        type: String,
-        unique: true,
-        sparse: true,
-    },
-    facebookId: {
-        type: String,
-        unique: true,
-        sparse: true,
-    },
-
     role: {
         type: String,
         enum: [ 'member', 'moderator', 'admin'],
         default: 'member',
-    },
-    isRegistered: {
-        type: Boolean,
-        default: false,
     },
 }, { strict: 'throw' });
 

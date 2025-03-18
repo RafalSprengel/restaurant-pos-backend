@@ -4,10 +4,7 @@ const Product = require('../db/models/Product');
 const Order = require('../db/models/Order');
 
 exports.createCheckoutSession = async (req, res) => {
-    // zmienic w kodzie że jeżeli jest flaga isGuest=true to dodajemy do zamówienia dane z pól formularza do pozycji byer i wpisujemy dane, natomiast w user wpisujemy null
-    // jeżeli flaga jest isGuest=false to dodajemy do zamówienia buyer dane z formularza a w pole user email wpisujemy email
-    //w takiej kombinacji mozna przefiltrowac zamówienia od zarejestrowanych użytkowników i wyświetlić konta tych uzytkowników z uzyciem maila
-    
+  
     try {
 
         const productIds = req.body.items.map((item) => item.id);
@@ -21,7 +18,6 @@ exports.createCheckoutSession = async (req, res) => {
             productObject.quantity = item ? item.quantity : 0; // Default quantity to 0 if item not found
             return productObject;
         });
-console.log(req.body)
         const order = new Order({
             isGuest: req.body.isGuest,
             customerId: req.body.isGuest ? null : req.body.customerId,
@@ -49,22 +45,8 @@ console.log(req.body)
             status: 'new',
             isPaid: false,
         });
-        const dane = { parametr1: [{x: 1, y: 2}] };
-console.log(dane);
 
         await order.save();
-// const szukane= productsWithQuantity.map((product) => ({
-//     price_data: {
-//         currency: 'pln',
-//         product_data: {
-//             name: product.name,
-//         },
-//         unit_amount: Math.round(product.price * 100), // Convert price to cents
-//     },
-//     quantity: product.quantity,
-// }));
-// console.log("szukane : ",szukane)
-
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'blik', 'p24'],

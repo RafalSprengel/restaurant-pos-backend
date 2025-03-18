@@ -10,6 +10,9 @@ const passport = require('./config/passport');
 const apiRoutes_v1 = require('./routes/v1/index.js');
 const app = express();
 const cookieParser = require('cookie-parser');
+const visits = require('./middleware/visits');
+const Visit = require('./db/models/Visit')
+
 
 const originalConsoleError = console.error;
 console.error = (...args) => { 
@@ -29,6 +32,8 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use(cookieParser());
+
+app.use(visits);    // middleware to count visitors
 
 app.use(express.json());
 
