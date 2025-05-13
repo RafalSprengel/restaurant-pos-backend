@@ -4,7 +4,7 @@ exports.getCustomerOrders = async (req, res) => {
     
     const { user } = req;
     try {
-        const orders = await Order.find({ customerId: user._id });
+        const orders = await Order.find({ customerId: user._id, isVisible: true });
         if (orders) {
             return res.status(200).json(orders);
         } else {
@@ -16,12 +16,18 @@ exports.getCustomerOrders = async (req, res) => {
     }
 }
 
-exports.deleteCustomerOrder = async (req, res) => {
+exports.updateCustomerOrder = async (req, res) => {
     const { id } = req.params;
     const { user } = req;
+    console.log('user: ', user);
+    console.log('id: ', id);
     try {
-        const deletedOrder = await Order.findOneAndDelete({ _id: id, customerId: user._id });
-        if (deletedOrder) {
+        const updatedOrder = await Order.findOneAndUpdate(
+            {_id: id, customerId: user._id},
+            {isVisible: false},
+            {new: true}
+        );
+        if (updatedOrder) {
             return res.status(200).json({ message: 'Order deleted successfully' });
         } else {
             return res.status(404).json({ error: 'Order not found' });

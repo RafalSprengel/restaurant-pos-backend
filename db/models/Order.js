@@ -85,6 +85,10 @@ const orderSchema = new mongoose.Schema({
     paymentFailureReason: {
         type: String,
     },
+    isVisible: {
+        type: Boolean,
+        default: true,
+    },
 },{ strict: 'throw' });
 
 

@@ -5,7 +5,7 @@ const orderController = require('../../controllers/orderController');
 const router = express.Router();
 
 router.get('/customer/', authentMiddleware,orderController.getCustomerOrders )
-router.delete('/customer/:id', authentMiddleware, orderController.deleteCustomerOrder);
+router.put('/customer/:id', authentMiddleware, orderController.updateCustomerOrder); //mark as not visible for customer
 
 router.get('/', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.getOrders);
 router.get('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.getSingleOrder);
