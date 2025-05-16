@@ -9,5 +9,6 @@ router.use('/stripe', require('./stripe'));
 router.use('/customers', require('./customers'));
 router.use('/staff', require('./staff'));
 router.use('/stats', require('./stats'));
+router.use('/tables', require('./tables'))
 
 module.exports = router;

@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const authentMiddleware = require('../../middleware/authentMiddleware');
-const authorize = require('../../middleware/authorize');
+const tableController =require('../../controllers/tableController')
 
-router.get('/', authentMiddleware, authorize(['member', 'moderator', 'admin']), tableController.getTables);
+router.post('/reservation', tableController.addReservation)
+router.get('/:id', tableController.findAvailableTables);
+router.get('/', tableController.getTables); 
+router.post('/', tableController.addTable)
+
+
+module.exports = router

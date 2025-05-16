@@ -1,6 +1,6 @@
 {
   "watch": ["src"],
-  "ignore": ["node_modules", "logs", ".git"],
+  "ignore": ["node_modules/*", "logs", ".git"],
   "ext": "js,json",
   "delay": "500"
 }
