@@ -13,7 +13,24 @@ const reservationSchema = new mongoose.Schema({
             required: true
         },
     },
-    customerName: { type: String, required: true },
+    customerDetails: {
+        name: {
+            type: String,
+            require: true
+        },
+        email: {
+            type: String,
+            require: true,
+            lowercase: true,
+            match: [/^\S+@\S+\.\S+$/, 'Invalid email format']
+        },
+        phone: {
+            type: Number
+        },
+    },
+    message: {
+        type: String
+    }
 }, { strict: 'throw' });
 
 const Reservation = mongoose.model('Reservation', reservationSchema);

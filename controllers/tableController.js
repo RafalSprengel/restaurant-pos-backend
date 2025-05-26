@@ -12,30 +12,6 @@ exports.getTables = async (req, res) => {
     };
 }
 
-exports.findAvailableTables = async (req, res) => {
-    const reservedDate = req.params.id;
-    if (isNaN(reservedDate)) {
-        return res.status(400).json({ error: 'Invalid date format' });
-    }
-    const tables = await Table.find();
-
-    const availableTables = [];
-
-    for (let table of tables) {
-        const existingReservation = await Reservation.findOne({
-            table: table._id,
-            reservedDate: reservedDate,
-        });
-
-        if (!existingReservation) {
-            availableTables.push(table);
-        }
-    }
-
-    return availableTables;
-};
-
-
 exports.addTable = async (req, res) => {
     const { tableNumber, capacity, location } = req.body;
 
@@ -64,30 +40,28 @@ exports.addTable = async (req, res) => {
 };
 
 exports.addReservation = async (req, res) => {
-    const { tableNumber, reservedDateTime, customerName } = req.body;
+    const { tableNumber, reservedTime, reservedDate, customerDetails, message } = req.body;
     const RESERVATION_DURATION_HOURS = 2;
 
-    if (!tableNumber || !reservedDateTime || !customerName) {
-        return res.status(400).json({ message: 'Missing fields' });
+    if (!tableNumber || !reservedTime || !reservedDate || !customerDetails.name || !customerDetails.email) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const dateISOstring = `${reservedDate}T${reservedTime}:00.000Z`;
+    const startDate = new Date(dateISOstring);
+
+    if (startDate < new Date(Date.now() + RESERVATION_DURATION_HOURS * 60 * 60 * 1000)) {
+        return res.status(400).json({
+            message: `Reservations must be made at least ${RESERVATION_DURATION_HOURS} hour(s) in advance`
+        });
     }
 
     try {
-        const regex = /^([01]?\d|2[0-3]):([0-5]?\d) (0?[1-9]|[12]\d|3[01])\.(0?[1-9]|1[0-2])\.(20\d{2})$/;
-        const match = reservedDateTime.match(regex);
-
-        if (!match) {
-            return res.status(400).json({ error: 'Invalid reservedDate format. Expected HH:mm DD.MM.YYYY.' });
-        }
-
-        const [, hours, minutes, day, month, year] = match;
-
-        const startDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
         const endDate = new Date(startDate.getTime() + RESERVATION_DURATION_HOURS * 60 * 60 * 1000);
-
         const table = await Table.findOne({ tableNumber });
 
         if (!table) {
-            return res.status(404).json({ error: 'Table not found' });
+            return res.status(404).json({ message: 'Table not found' });
         }
 
         const overlappingReservation = await Reservation.findOne({
@@ -97,7 +71,7 @@ exports.addReservation = async (req, res) => {
         });
 
         if (overlappingReservation) {
-            return res.status(409).json({ error: 'Table already booked during this time!' });
+            return res.status(409).json({ message: 'Table is already reserved during the selected time' });
         }
 
         const newReservation = new Reservation({
@@ -107,94 +81,111 @@ exports.addReservation = async (req, res) => {
                 startDate,
                 endDate
             },
-            customerName,
+            customerDetails,
+            message
         });
 
         await newReservation.save();
-
         return res.status(201).json({
-            message: 'Reservation successful',
+            message: 'Reservation created successfully',
             reservation: newReservation
         });
 
     } catch (err) {
         console.error('ERROR adding reservation:', err);
-        return res.status(500).json({ error: 'Error adding reservation' });
+        return res.status(500).json({ message: 'Internal server error while creating reservation' });
     }
 };
-
-
 
 exports.getAvailability = async (req, res) => {
-  const RESERVATION_HOURS = {
-    startHour: 11,
-    endHour: 20,
-  };
+    const RESERVATION_HOURS = {
+        startHour: 0,
+        endHour: 20,
+    };
 
-  const SLOT_DURATION_MINUTES = 120;
-  const MAX_DAYS_IN_ADVANCE = 21;
-  const { date, tableNumber } = req.query;
+    const MIN_START_TIME_OFFSET = 3; // in hours
+    const SLOT_STEP_MINUTES = 60;
+    const MAX_DAYS_IN_ADVANCE = 21;
+    const { date, tableNumber } = req.query;
 
-  if (!date || !tableNumber) {
-    return res.status(400).json({ message: 'Missing date or tableNumber' });
-  }
-
-  const selectedDate = new Date(date);
-  if (isNaN(selectedDate.getTime())) {
-    return res.status(400).json({ message: 'Invalid date format' });
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.floor((selectedDate - today) / (1000 * 60 * 60 * 24));
-  if (diffDays > MAX_DAYS_IN_ADVANCE) {
-    return res.status(400).json({ message: 'Date too far in the future' });
-  }
-
-  try {
-    const table = await Table.findOne({ tableNumber });
-    if (!table) return res.status(404).json({ message: 'Table not found' });
-
-    const dayStart = new Date(selectedDate);
-    dayStart.setUTCHours(0, 0, 0, 0);
-    const dayEnd = new Date(selectedDate);
-    dayEnd.setUTCHours(23, 59, 59, 999);
-
-    const reservations = await Reservation.find({
-      tableId: table._id,
-      'reservedDate.startDate': { $gte: dayStart, $lt: dayEnd }
-    });
-
-    function isSlotBusy(slotStart) {
-      const slotEnd = new Date(slotStart.getTime() + SLOT_DURATION_MINUTES * 60 * 1000);
-
-      return reservations.some(r => {
-        const resStart = r.reservedDate.startDate;
-        const resEnd = r.reservedDate.endDate;
-        return (slotStart < resEnd) && (slotEnd > resStart);
-      });
+    if (!date || !tableNumber) {
+        return res.status(400).json({ message: 'Missing date or tableNumber' });
     }
 
-    const availableSlots = [];
-    for (let h = RESERVATION_HOURS.startHour; h < RESERVATION_HOURS.endHour; h++) {
-      for (let m = 0; m < 60; m += SLOT_DURATION_MINUTES) {
-        const slotStart = new Date(selectedDate);
-        slotStart.setUTCHours(h, m, 0, 0);
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        availableSlots.push({
-          time: slotStart.toISOString(),
-          available: !isSlotBusy(slotStart),
+    const diffDays = Math.floor((selectedDate - today) / (1000 * 60 * 60 * 24));
+    if (diffDays > MAX_DAYS_IN_ADVANCE) {
+        return res.status(400).json({ message: 'Date too far in the future' });
+    }
+
+    const now = new Date();
+    const nowWithOffset = new Date(now.getTime() + MIN_START_TIME_OFFSET * 60 * 60 * 1000);
+
+    try {
+        const table = await Table.findOne({ tableNumber });
+        if (!table) return res.status(404).json({ message: 'Table not found' });
+
+        const dayStart = new Date(selectedDate);
+        dayStart.setUTCHours(0, 0, 0, 0);
+        const dayEnd = new Date(selectedDate);
+        dayEnd.setUTCHours(23, 59, 59, 999);
+
+        const reservations = await Reservation.find({
+            tableId: table._id,
+            'reservedDate.startDate': { $gte: dayStart, $lt: dayEnd }
         });
-      }
-    }
 
-    return res.json({ slots: availableSlots });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Server error' });
-  }
+        function isSlotBusy(slotStart) {
+            const slotEnd = new Date(slotStart.getTime() + SLOT_STEP_MINUTES * 60 * 1000);
+            return reservations.some(r => {
+                const resStart = r.reservedDate.startDate;
+                const resEnd = r.reservedDate.endDate;
+                return (slotStart < resEnd) && (slotEnd > resStart);
+            });
+        }
+
+        const availableSlots = [];
+
+        for (let h = RESERVATION_HOURS.startHour; h < RESERVATION_HOURS.endHour; h += SLOT_STEP_MINUTES / 60) {
+            const slotStart = new Date(Date.UTC(
+                selectedDate.getUTCFullYear(),
+                selectedDate.getUTCMonth(),
+                selectedDate.getUTCDate(),
+                Math.floor(h),
+                Math.round((h - Math.floor(h)) * 60),
+                0, 0
+            ));
+
+            const nowUtc = new Date(new Date().toISOString());
+            const nowWithOffsetUtc = new Date(nowUtc.getTime() + MIN_START_TIME_OFFSET * 60 * 60 * 1000);
+
+            if (
+                selectedDate.getUTCFullYear() === nowUtc.getUTCFullYear() &&
+                selectedDate.getUTCMonth() === nowUtc.getUTCMonth() &&
+                selectedDate.getUTCDate() === nowUtc.getUTCDate() &&
+                slotStart < nowWithOffsetUtc
+            ) {
+                continue;
+            }
+
+            availableSlots.push({
+                time: slotStart.toISOString(),
+                available: !isSlotBusy(slotStart),
+            });
+        }
+
+        return res.json({ slots: availableSlots });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'Server error' });
+    }
 };
+
+
 
 
 

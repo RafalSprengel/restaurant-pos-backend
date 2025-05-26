@@ -6,7 +6,6 @@ router.post('/reservation', tableController.addReservation)
 router.get('/availability', tableController.getAvailability);
 router.get('/', tableController.getTables); 
 router.post('/', tableController.addTable)
-router.get('/:id', tableController.findAvailableTables);
 
 
 
