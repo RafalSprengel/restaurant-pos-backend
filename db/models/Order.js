@@ -23,7 +23,7 @@ const orderSchema = new mongoose.Schema({
         type: Boolean, 
         required: true,
     },
-    customerId: { 
+    customer: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Customer',
         required: function () {

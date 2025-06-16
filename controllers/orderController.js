@@ -1,7 +1,7 @@
 const Order = require('../db/models/Order');
 
 exports.getCustomerOrders = async (req, res) => {
-    
+
     const { user } = req;
     try {
         const orders = await Order.find({ customerId: user._id, isVisible: true });
@@ -23,9 +23,9 @@ exports.updateCustomerOrder = async (req, res) => {
     console.log('id: ', id);
     try {
         const updatedOrder = await Order.findOneAndUpdate(
-            {_id: id, customerId: user._id},
-            {isVisible: false},
-            {new: true}
+            { _id: id, customerId: user._id },
+            { isVisible: false },
+            { new: true }
         );
         if (updatedOrder) {
             return res.status(200).json({ message: 'Order deleted successfully' });
@@ -40,6 +40,7 @@ exports.updateCustomerOrder = async (req, res) => {
 }
 
 exports.getOrders = async (req, res) => {
+    console.log('wykonuje get orders')
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * limit;
@@ -48,20 +49,20 @@ exports.getOrders = async (req, res) => {
     const sortOrder = req.query.sortOrder === 'desc' ? 1 : -1;
 
     const search = searchString
-    ? {
-        $or: [
-            { 'customer.name': { $regex: searchString, $options: 'i' } },
-            { 'customer.surname': { $regex: searchString, $options: 'i' } },
-            { 'customer.email': { $regex: searchString, $options: 'i' } },
-            { 'product.name': { $regex: searchString, $options: 'i' } },
-            { 'deliveryAddress.city': { $regex: searchString, $options: 'i' } },
-            { orderType: { $regex: searchString, $options: 'i' } },
-            ...(isNaN(parseInt(searchString)) ? [] : [{ orderNumber: { $eq: parseInt(searchString) } }]),
-            { note: { $regex: searchString, $options: 'i' } },
-            { status: { $regex: searchString, $options: 'i' } },
-        ],
-    }
-    : {};
+        ? {
+            $or: [
+                { 'purchaserDetails.firstName': { $regex: searchString, $options: 'i' } },
+                { 'purchaserDetails.surname': { $regex: searchString, $options: 'i' } },
+                { 'purchaserDetails.email': { $regex: searchString, $options: 'i' } },
+                { 'products.name': { $regex: searchString, $options: 'i' } },
+                { 'deliveryAddress.city': { $regex: searchString, $options: 'i' } },
+                { orderType: { $regex: searchString, $options: 'i' } },
+                ...(isNaN(parseInt(searchString)) ? [] : [{ orderNumber: { $eq: parseInt(searchString) } }]),
+                { note: { $regex: searchString, $options: 'i' } },
+                { status: { $regex: searchString, $options: 'i' } },
+            ],
+        }
+        : {};
 
 
     try {

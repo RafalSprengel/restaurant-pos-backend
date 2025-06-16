@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 const reservationSchema = new mongoose.Schema({
     tableId: { type: mongoose.Schema.Types.ObjectId, ref: 'Table', required: true },
     tableNumber: { type: Number, require: true },
-    reservedDate: {
-        startDate: {
+    timeSlot: {
+        start: {
             type: Date,
             required: true
         },
-        endDate: {
+        end: {
             type: Date,
             required: true
         },

@@ -160,14 +160,14 @@ exports.loginMgmt = async (req, res) => {
             path: '/',
             secure: process.env.NODE_ENV === 'production',
             maxAge: jwtAccessTokenMaxAge *1000,// in milliseconds
-            sameSite: 'Lax',
+            sameSite: 'None', // Lax
         });
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             path: '/v1/auth/refresh-token',
             secure: process.env.NODE_ENV === 'production',
             maxAge: jwtRefreshTokenMaxAge*1000,// in milliseconds
-            sameSite: 'Lax',
+            sameSite: 'None', //Lax
         });
         res.status(200).json({
             _id: staff._id,
