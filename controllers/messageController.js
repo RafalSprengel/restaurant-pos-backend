@@ -55,6 +55,16 @@ exports.getReceivedMessages = async (req, res) => {
   }
 }
 
+exports.getUnreadMessagesCount = async (req, res) => {
+  try {
+    const count = await Message.countDocuments({ isRead: false, type: 'received' });
+    res.status(200).json({ count });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to retrieve messages count. Details: ' + err.message });
+  }
+};
+
 exports.getSentMessages = async (req, res) => {
   try {
     result = await Message.find({ type: 'sent' })
@@ -73,9 +83,11 @@ exports.getMessageById = async (req, res) => {
     if (!message) {
       return res.status(404).json({ message: 'Message not found.' });
     }
-
+    await Message.findOneAndUpdate({ _id: id }, { isRead: true }, { new: true });
     res.status(200).json(message);
+
   } catch (err) {
+    s
     console.error(err);
     res.status(500).json({ message: 'Failed to retrieve message.' });
   }
@@ -154,6 +166,40 @@ exports.getMessages = async (req, res) => {
   } catch (err) {
     console.error('ERROR fetching messages:', err);
     return res.status(500).json({ error: 'Error fetching messages' });
+  }
+};
+
+exports.replyToMessage = async (req, res) => {
+  const { originalMessageId, body, subject } = req.body;
+
+  if (!originalMessageId || !body || !subject) {
+    return res.status(400).json({ message: 'ID, body, and subject are required.' });
+  }
+
+  try {
+    const originalMessage = await Message.findOne({
+      _id: originalMessageId,
+      type: 'received'
+    });
+    
+    if (!originalMessage) {
+      return res.status(404).json({ message: 'Original message not found.' });
+    }
+
+    const replyMessage = await Message.create({
+      name: originalMessage.name,
+      email: originalMessage.email,
+      subject,
+      body,
+      type: 'sent',
+      isRead: true, // Mark as read since it's a reply
+      originalTopic: originalMessageId
+    });
+
+    res.status(201).json({ message: 'Reply sent successfully.', replyMessage });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to send reply.' });
   }
 };
 

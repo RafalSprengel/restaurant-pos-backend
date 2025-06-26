@@ -9,7 +9,13 @@ const messageSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['received', 'sent'],
-    default: 'received'
+    default: 'received',
+    required: true,
+  },
+  originalTopic: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Message',
+    default: null,
   },
   createdAt: { type: Date, default: Date.now },
 });

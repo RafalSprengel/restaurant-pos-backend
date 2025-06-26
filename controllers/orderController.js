@@ -40,7 +40,6 @@ exports.updateCustomerOrder = async (req, res) => {
 }
 
 exports.getOrders = async (req, res) => {
-    console.log('wykonuje get orders')
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * limit;

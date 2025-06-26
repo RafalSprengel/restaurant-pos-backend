@@ -5,8 +5,10 @@ const messageController = require('../../controllers/messageController')
 
 router.get('/received', messageController.getReceivedMessages)
 router.get('/sent', messageController.getSentMessages)
+router.get('/unread-count', messageController.getUnreadMessagesCount);
+router.post('/reply', messageController.replyToMessage); 
 
-router.get('/', messageController.getMessages);
+router.get('/', messageController.getMessages );
 router.get('/:id', messageController.getMessageById);
 router.post('/', messageController.addMessage);
 router.post('/delete-many', messageController.deleteMessages)
