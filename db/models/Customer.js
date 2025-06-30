@@ -5,7 +5,7 @@ const timestamps = require('mongoose-timestamp');
 const customerSchema = new mongoose.Schema({
     customerNumber: {
         type: Number,
-        unique: true, // Zapewnia unikalność numeru klienta
+        unique: true,
     },
     name: {
         type: String,
@@ -22,7 +22,7 @@ const customerSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true, // Zapobiega duplikatom e-maili
+        unique: true, 
     },
     address: {
         city: {
@@ -56,7 +56,6 @@ const customerSchema = new mongoose.Schema({
     },
 }, { strict: 'throw' });
 
-// Dodanie auto-increment do pola customerNumber
 customerSchema.plugin(AutoIncrement, { inc_field: 'customerNumber' });
 
 customerSchema.plugin(timestamps);

@@ -1,5 +1,4 @@
 const {Staff} = require('../db/models/Staff');
-const mongoose = require('mongoose');
 
 
 
@@ -122,9 +121,7 @@ exports.updateStaff = async (req, res) => {
     }
 };
 
-
-
-exports.deleteStaff= async (req, res) =>{
+exports.deleteStaff = async (req, res) => {
     const { id } = req.params;
     try {
         const deletedStaff = await Staff.findByIdAndDelete(id);
@@ -138,6 +135,4 @@ exports.deleteStaff= async (req, res) =>{
         return res.status(500).json({ error: 'Error deleting Staff member ' });
     }
 
-}
-
-
+};

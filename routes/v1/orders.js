@@ -4,11 +4,15 @@ const authorize = require('../../middleware/authorize');
 const orderController = require('../../controllers/orderController');
 const router = express.Router();
 
-router.get('/customer/', authentMiddleware,orderController.getCustomerOrders )
-router.put('/customer/:id', authentMiddleware, orderController.updateCustomerOrder); //mark as not visible for customer
+//==========  CUSTOMER PANEL  ==========//
+router.get('/customer/', authentMiddleware,orderController.getCustomerOrdersAsCustomer)
+router.put('/customer/:id', authentMiddleware, orderController.deleteCustomerOrderAsCustomer); //only mark as not visible for customer
 
-router.get('/', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.getOrders);
-router.get('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.getSingleOrder);
-router.delete('/:id', authentMiddleware, authorize(['admin']), orderController.deleteOrder);
+//==========  ADMIN PANEL  ==========//
+router.get('/order-types',orderController.getOrderTypesAsAdmin);
+router.get('/', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.getAllOrdersAsAdmin);
+router.get('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.getSingleOrderAsAdmin);
+router.put('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.updateOrderAsAdmin);
+router.delete('/:id', authentMiddleware, authorize(['admin']), orderController.deleteOrderAsAdmin);
 
 module.exports = router;

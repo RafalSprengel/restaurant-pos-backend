@@ -37,7 +37,7 @@ exports.registerCustomer = async (req, res) =>  {
         if (!process.env.JWT_SECRET ) return res.status(500).json({ error: 'no process.env.JWT_SECRET, check .env file' });
 
         let customer = await Customer.findOne({ email });
-        if (customer) return res.status(409).json({ error: 'Customer already exists' });
+        if (customer) return res.status(409).json({ error: 'This email already exists' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
         customer = new Customer({
@@ -115,7 +115,7 @@ exports.registerMgmt = async (req, res) => {
         if (!process.env.JWT_SECRET ) return res.status(500).json({ error: 'no process.env.JWT_SECRET, check .env file' });
 
         let staff = await Staff.findOne({ email });
-        if (staff) return res.status(409).json({ error: 'Staff member already exists' });
+        if (staff) return res.status(409).json({ error: 'This email already exists!' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
         staff = new Staff({

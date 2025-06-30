@@ -124,7 +124,6 @@ exports.deleteReservatonById = async (req, res) => {
   }
 };
 
-
 exports.addTable = async (req, res) => {
   const { tableNumber, capacity, location } = req.body;
 

@@ -3,9 +3,9 @@ const  Order  = require('../db/models/Order');
 
 //==========  Customer panel  ======
 
-exports.getCustomerDetails  = async (req, res) => {
+exports.getCustomerDetailsAsCustomer  = async (req, res) => {
     try {
-        const customer = await Customer.findById(req.user._id);
+        const customer = await Customer.findById(req.user._id).select('-password -__v');
         if (customer) {
             return res.status(200).json(customer);
         } else {
@@ -18,8 +18,9 @@ exports.getCustomerDetails  = async (req, res) => {
     }
 };
 
-exports.updateCustomerDetails = async (req, res) => {
+exports.updateCustomerAsCustomer = async (req, res) => {
     const { name, surname, email, phone, password, address } = req.body;
+    console.log(req.body.address)
     try {
         const updatedCustomer = await Customer.findByIdAndUpdate(req.user._id, {
             $set: {
@@ -37,12 +38,9 @@ exports.updateCustomerDetails = async (req, res) => {
         return res.status(500).json({ error: 'Error updating customer' });
     }
 };
-
-
-
 //=========  Admin panel  =========
 
-exports.getCustomers = async (req, res) => {
+exports.getCustomersAsAdmin = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * limit;
@@ -92,10 +90,9 @@ exports.getCustomers = async (req, res) => {
     }
 };
 
-
-exports.getSingleCustomer = async (req, res) => {
+exports.getSingleCustomerAsAdmin = async (req, res) => {
     try {
-        const product = await Customer.findById(req.params.id);
+        const product = await Customer.findById(req.params.id).select('-password -__v');
         if (product) {
             return res.status(200).json(product);
         } else {
@@ -107,15 +104,16 @@ exports.getSingleCustomer = async (req, res) => {
     }
 };
 
-exports.updateCustomer = async (req,res)=>{
+exports.updateCustomerAsAdmin = async (req,res)=>{
     const {id}= req.params;
-    const {name, surname, email, phone, password} = req.body;
+    const {name, surname, email, phone, address} = req.body;
+    console.log(req.body);
 
     try{
         const updatedCustomer = await Customer.findByIdAndUpdate(id,
             {
                 $set:{
-                    name, surname, email, phone, password
+                    name, surname, email, phone, address
                 },
             },
             {new: true}
@@ -128,7 +126,7 @@ exports.updateCustomer = async (req,res)=>{
     }
 }
 
-exports.deleteCustomer = async (req, res) => {
+exports.deleteCustomerAsAdmin = async (req, res) => {
     const { id } = req.params;
     try {
         const deletedCustomer = await Customer.findByIdAndDelete(id);

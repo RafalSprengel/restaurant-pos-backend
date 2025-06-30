@@ -1,4 +1,5 @@
 const express = require('express');
+const { route } = require('./auth');
 const router = express.Router();
 
 router.use('/auth', require('./auth'));
@@ -11,4 +12,5 @@ router.use('/staff', require('./staff'));
 router.use('/stats', require('./stats'));
 router.use('/tables', require('./tables'))
 router.use('/messages', require('./message'))
+router.use('/settings', require('./settings'));
 module.exports = router;

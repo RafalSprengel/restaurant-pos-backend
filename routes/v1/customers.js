@@ -4,12 +4,15 @@ const customerController = require('../../controllers/customerController');
 const authentMiddleware = require('../../middleware/authentMiddleware');
 const authorize = require('../../middleware/authorize');
 
-router.get('/customer/', authentMiddleware, customerController.getCustomerDetails);
-router.put('/customer/', authentMiddleware, customerController.updateCustomerDetails);
+//==========  CUSTOMER PANEL  ==========//
+router.get('/customer/', authentMiddleware, customerController.getCustomerDetailsAsCustomer); // customer panel
 
-router.get('/', authentMiddleware, authorize(['member', 'moderator', 'admin']), customerController.getCustomers);
-router.get('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), customerController.getSingleCustomer);
-router.put('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), customerController.updateCustomer);
-router.delete('/:id', authentMiddleware, authorize(['admin']), customerController.deleteCustomer);
+//==========  ADMIN PANEL  ==========//
+router.get('/', authentMiddleware, authorize(['member', 'moderator', 'admin']), customerController.getCustomersAsAdmin);
+router.get('/:id', customerController.getSingleCustomerAsAdmin);
+// router.get('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), customerController.getSingleCustomerAsAdmin);
+router.put('/:id', customerController.updateCustomerAsAdmin);
+// router.put('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), customerController.updateCustomerAsAdmin);
+router.delete('/:id', authentMiddleware, authorize(['admin']), customerController.deleteCustomerAsAdmin);
 
 module.exports = router;

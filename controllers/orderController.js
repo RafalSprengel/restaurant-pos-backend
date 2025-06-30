@@ -1,6 +1,6 @@
 const Order = require('../db/models/Order');
 
-exports.getCustomerOrders = async (req, res) => {
+exports.getCustomerOrdersAsCustomer = async (req, res) => {
 
     const { user } = req;
     try {
@@ -16,7 +16,7 @@ exports.getCustomerOrders = async (req, res) => {
     }
 }
 
-exports.updateCustomerOrder = async (req, res) => {
+exports.deleteCustomerOrderAsCustomer = async (req, res) => {
     const { id } = req.params;
     const { user } = req;
     console.log('user: ', user);
@@ -39,7 +39,17 @@ exports.updateCustomerOrder = async (req, res) => {
     }
 }
 
-exports.getOrders = async (req, res) => {
+exports.getOrderTypesAsAdmin = async (req, res) => {
+    try {
+        const orderTypes = Order.schema.path('orderType').enumValues;
+        return res.status(200).json(orderTypes);
+    } catch (err) {
+        console.error('ERROR fetching order types from schema: ', err);
+        return res.status(500).json({ error: 'Error reading order types from model' });
+    }
+};
+
+exports.getAllOrdersAsAdmin = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * limit;
@@ -88,7 +98,7 @@ exports.getOrders = async (req, res) => {
     }
 };
 
-exports.getSingleOrder = async (req, res) => {
+exports.getSingleOrderAsAdmin = async (req, res) => {
     const { id } = req.params;
     try {
         const order = await Order.findById(id).populate('customer', 'name surname');
@@ -103,7 +113,24 @@ exports.getSingleOrder = async (req, res) => {
     }
 };
 
-exports.deleteOrder = async (req, res) => {
+exports.updateOrderAsAdmin = async (req, res) => {
+    const { id } = req.params;
+    const updateData = req.body;    
+
+    try {
+        const updatedOrder = await Order.findByIdAndUpdate(id, updateData, { new: true });
+        if (updatedOrder) {
+            return res.status(200).json(updatedOrder);
+        } else {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+    } catch (err) {
+        console.error('ERROR updating order: ', err);
+        return res.status(500).json({ error: 'Error updating order' });
+    }
+};
+
+exports.deleteOrderAsAdmin = async (req, res) => {
     const { id } = req.params;
     try {
         const deletedOrder = await Order.findByIdAndDelete(id);
