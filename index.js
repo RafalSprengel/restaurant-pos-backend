@@ -1,6 +1,4 @@
 require('dotenv').config();
-//console.log(process.env.GOOGLE_CLIENT_ID);
-//console.log(process.env.GOOGLE_CLIENT_SECRET);
 const logger = require('./utils/logger');
 require('./db/mongoose.js');
 const cors = require('cors');
@@ -12,27 +10,37 @@ const app = express();
 const cookieParser = require('cookie-parser');
 const visits = require('./middleware/visits');
 const Visit = require('./db/models/Visit')
+const stripeController = require('./controllers/stripeController');
 
-
+// All patch start from /api  e.g. wen use '/v1/auth/login' in real is '/api/v1/auth/login'
 const originalConsoleError = console.error;
-console.error = (...args) => { 
-    logger.error(args); 
-    originalConsoleError(...args); 
+console.error = (...args) => {
+    logger.error(args);
+    originalConsoleError(...args);
 };
 
-// if (process.env.NODE_ENV === 'development') {
-//     app.use(
-//         cors({
-//             origin: 'http://localhost:3000', 
-//             methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-//             allowedHeaders: ['Content-Type', 'Authorization'], 
-//             credentials: true, 
-//         })
-//     );
-// }
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://localhost:3000', 
+    'https://demo1.rafalsprengel.com',
+    'https://192.168.0.74:3000'
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+}));
 
 app.use(cookieParser());
 app.use(visits);    // middleware to count visitors
+app.post('/v1/stripe/webhook', express.raw({ type: 'application/json' }), stripeController.webhook); 
 app.use(express.json());
 
 app.use(passport.initialize());
@@ -42,6 +50,10 @@ app.get('/', (req, res) => {
 app.use('/v1', apiRoutes);
 
 app.use('/uploads', express.static('uploads'));
+
+app.use((req, res) => {
+    res.status(404).json({ error: 'Sorry, not valid API address.' });
+});
 
 app.listen(port, () => {
     console.log('Server is listening on port ' + port);

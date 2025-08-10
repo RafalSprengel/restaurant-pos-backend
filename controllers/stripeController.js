@@ -1,12 +1,30 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const {Customer }= require('../db/models/Customer');
+const  Customer  = require('../db/models/Customer');
 const Product = require('../db/models/Product');
 const Order = require('../db/models/Order');
 
 exports.createCheckoutSession = async (req, res) => {
-  
-    try {
+    const registered = !!req.customer;
+    const customerId = req.customer?._id || null;
+    const requiredFields = [
+        'items',
+        'successUrl',
+        'cancelUrl',
+        'orderType'
+    ];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    if (missingFields.length > 0) {
+        return res.status(400).json({ error: `Missing required fields: ${missingFields.join(', ')}` });
+    }
+    const customerFields = ['firstName', 'surname', 'phone', 'email'];
+    const missingCustomerFields = customerFields.filter(field => !req.body.purchaser[field]);
 
+    if (missingCustomerFields.length > 0) {
+        return res.status(400).json({ error: `Missing required customer fields: ${missingCustomerFields.join(', ')}` });
+    }
+
+    try {
+        const customer = await Customer.findById(customerId)
         const productIds = req.body.items.map((item) => item.id);
         const products = await Product.find({
             _id: { $in: productIds },
@@ -19,13 +37,12 @@ exports.createCheckoutSession = async (req, res) => {
             return productObject;
         });
         const order = new Order({
-            isGuest: req.body.isGuest,
-            customerId: req.body.isGuest ? null : req.body.customerId,
-            purchaserDetails:{
-                firstName: req.body.customer.name,
-                surname: req.body.customer.surname,
-                phone: req.body.customer.phone,
-                email: req.body.customer.email
+            customer: customerId,
+            purchaserDetails: {
+                firstName: req.body.purchaser.firstName,
+                surname: req.body.purchaser.surname,
+                phone: req.body.purchaser.phone,
+                email: req.body.purchaser.email
             },
             products: productsWithQuantity.map((product) => ({
                 productId: product._id,
@@ -42,7 +59,6 @@ exports.createCheckoutSession = async (req, res) => {
             orderType: req.body.orderType,
             orderTime: req.body?.orderTime,
             note: req.body?.note,
-            status: 'new',
             isPaid: false,
         });
 
@@ -66,7 +82,7 @@ exports.createCheckoutSession = async (req, res) => {
             metadata: {
                 orderId: order._id.toString(),
             },
-            customer_email: req.body.customer.email,
+            customer_email: registered? customer.email : req.body.purchaser.email,
             payment_intent_data: {
                 metadata: { orderId: order._id.toString() },
             },
@@ -75,7 +91,7 @@ exports.createCheckoutSession = async (req, res) => {
         res.json({ url: session.url });
     } catch (e) {
         console.error("Error occurred: ", e);
-        res.status(500).json({ error: e.message }); 
+        res.status(500).json({ error: e.message });
     }
 };
 
@@ -107,6 +123,7 @@ exports.webhook = async (req, res) => {
     try {
         switch (event.type) {
             case 'payment_intent.succeeded':
+                console.log('PaymentIntent was successful!');
                 const paymentIntent = event.data.object;
                 const orderId = paymentIntent.metadata.orderId;
                 const order = await Order.findById(orderId);
@@ -123,6 +140,7 @@ exports.webhook = async (req, res) => {
                 break;
 
             case 'payment_intent.payment_failed':
+                console.log('PaymentIntent failed');
                 const failedIntent = event.data.object;
                 const failedOrderId = failedIntent.metadata.orderId;
                 const failedOrder = await Order.findById(failedOrderId);
@@ -135,6 +153,7 @@ exports.webhook = async (req, res) => {
                 break;
 
             case 'payment_intent.canceled':
+                console.log('PaymentIntent was canceled');
                 const canceledIntent = event.data.object;
                 const canceledOrderId = canceledIntent.metadata.orderId;
                 const canceledOrder = await Order.findById(canceledOrderId);
@@ -147,6 +166,7 @@ exports.webhook = async (req, res) => {
                 break;
         }
     } catch (error) {
+
         console.error('Webhook error:', error);
         return res.status(500).json({ error: 'Webhook processing failed' });
     }

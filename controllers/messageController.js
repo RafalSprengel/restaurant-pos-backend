@@ -1,9 +1,8 @@
 const Message = require('../db/models/Message');
 const nodemailer = require('nodemailer');
+const Settings = require('../db/models/Settings.js');
 
-const ADMIN_EMAIL = 'sprengel.rafal@gmail.com';
-
-exports.addMessage = async (req, res) => {
+exports.newMessageFromForm = async (req, res) => {
   const { name, email, subject, body } = req.body;
 
   if (!name || !email || !subject || !body) {
@@ -13,17 +12,24 @@ exports.addMessage = async (req, res) => {
   try {
     const newMessage = await Message.create({ name, email, subject, body });
 
+    const settings = await Settings.findOne({}).sort({ createdAt: -1 });
+    if (!settings) {
+      return res.status(500).json({ message: 'SMTP settings not found in database.' });
+    }
+
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: settings.smtpSettings.host,
+      port: settings.smtpSettings.port,
+      secure: settings.smtpSettings.secure,
       auth: {
-        user: 'sprengel.rafal@gmail.com',
-        pass: 'xlul nrqf molp oguy'
+        user: settings.smtpSettings.user,
+        pass: settings.smtpSettings.pass
       }
     });
 
     const adminMailOptions = {
       from: 'sprengel.rafal@gmail.com',
-      to: ADMIN_EMAIL,
+      to: settings.smtpSettings.user,
       subject: `New message from justcode.co.uk: ${subject}`,
       text: `From: ${name} <${email}>\n\n${body}`
     };
@@ -35,16 +41,20 @@ exports.addMessage = async (req, res) => {
       text: `You sent the following message to us:\n\n${body}\n\nWe will get back to you shortly.`
     };
 
-    await transporter.sendMail(adminMailOptions);
-    await transporter.sendMail(customerMailOptions);
+    try {
+      await transporter.sendMail(adminMailOptions);
+      await transporter.sendMail(customerMailOptions);
+    } catch (emailErr) {
+      console.error('SMTP send error:', emailErr);
+      return res.status(500).json({ message: 'Failed to send emails. Check SMTP configuration.' });
+    }
 
     res.status(201).json({ message: 'Message sent successfully.' });
   } catch (err) {
-    console.error(err);
+    console.error('General error:', err);
     res.status(500).json({ message: 'Something went wrong.' });
   }
 };
-
 exports.getReceivedMessages = async (req, res) => {
   try {
     result = await Message.find({ type: 'received' })
@@ -87,7 +97,6 @@ exports.getMessageById = async (req, res) => {
     res.status(200).json(message);
 
   } catch (err) {
-    s
     console.error(err);
     res.status(500).json({ message: 'Failed to retrieve message.' });
   }
@@ -103,15 +112,13 @@ exports.deleteMessageById = async (req, res) => {
     }
     res.status(200).json({ message: 'Message deleted successfully.' });
   } catch (err) {
-    console.error
+    console.error(err);
     res.status(500).json({ message: 'Failed to delete message.' });
   }
 };
 
-
 exports.deleteMessages = async (req, res) => {
   const { ids } = req.body;
-  console.log(ids)
 
   if (!Array.isArray(ids) || ids.length === 0) {
     return res.status(400).json({ message: 'IDs array is required.' });
@@ -181,7 +188,7 @@ exports.replyToMessage = async (req, res) => {
       _id: originalMessageId,
       type: 'received'
     });
-    
+
     if (!originalMessage) {
       return res.status(404).json({ message: 'Original message not found.' });
     }
@@ -202,4 +209,3 @@ exports.replyToMessage = async (req, res) => {
     res.status(500).json({ message: 'Failed to send reply.' });
   }
 };
-

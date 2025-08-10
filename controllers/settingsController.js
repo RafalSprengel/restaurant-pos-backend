@@ -4,24 +4,24 @@ exports.getSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) {
-      settings = await Settings.create({});
+      settings = await Settings.create({}); // tworzymy domyślne jeśli brak
     }
-    res.status(200).json(settings);
+    res.json(settings);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch settings." });
+    res.status(500).json({ message: "Failed to get settings." });
   }
 };
 
 exports.updateSettings = async (req, res) => {
-  const { reservationSettings, messageSettings } = req.body;
+  const { reservationSettings, smtpSettings } = req.body;
 
   try {
     let settings = await Settings.findOne();
     if (!settings) {
-      settings = await Settings.create({ reservationSettings, messageSettings });
+      settings = await Settings.create({ reservationSettings, smtpSettings });
     } else {
-      settings.reservationSettings = reservationSettings;
-      settings.messageSettings = messageSettings;
+      if (reservationSettings) settings.reservationSettings = reservationSettings;
+      if (smtpSettings) settings.smtpSettings = smtpSettings;
       await settings.save();
     }
     res.status(200).json({ message: "Settings updated successfully." });

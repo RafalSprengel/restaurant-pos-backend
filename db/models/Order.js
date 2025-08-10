@@ -19,15 +19,11 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         unique: true,
     },
-    isGuest: {
-        type: Boolean, 
-        required: true,
-    },
-    customer: { 
+    customer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Customer',
         required: function () {
-            return !this.isGuest;
+            return this.registered;
         },
     },
     purchaserDetails: {
@@ -64,11 +60,6 @@ const orderSchema = new mongoose.Schema({
     note: {
         type: String,
     },
-    status: {
-        type: String,
-        enum: ['new', 'created', 'processing', 'failed', 'canceled', 'completed'],
-        default: 'new',
-    },
     isPaid: {
         type: Boolean,
         default: false,
@@ -85,9 +76,9 @@ const orderSchema = new mongoose.Schema({
     paymentFailureReason: {
         type: String,
     },
-    isVisible: {
+    isDeletedByCustomer: {
         type: Boolean,
-        default: true,
+        default: false,
     },
 },{ strict: 'throw' });
 

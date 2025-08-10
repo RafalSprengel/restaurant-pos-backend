@@ -29,7 +29,6 @@ exports.getTypeOfTables = async (req, res) => {
 };
 
 exports.getReservations = async (req, res) => {
-  console.log('wykonuje się get Reservatons')
   const limit = parseInt(req.query.limit) || 10;
   const page = parseInt(req.query.page) || 1;
   const offset = (page - 1) * limit;

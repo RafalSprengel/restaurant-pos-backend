@@ -1,17 +1,17 @@
 const Order = require('../db/models/Order');
 
 exports.getCustomerOrdersAsCustomer = async (req, res) => {
-
     const { user } = req;
+
     try {
-        const orders = await Order.find({ customerId: user._id, isVisible: true });
+        const orders = await Order.find({ customer: user._id, isDeletedByCustomer: false });
         if (orders) {
             return res.status(200).json(orders);
         } else {
             return res.status(404).json({ error: 'Orders not found' });
         }
     } catch (e) {
-        console.log('ERROR fetching orders: ', e);
+        console.error('ERROR fetching orders: ', e);
         return res.status(500).json({ error: e.message });
     }
 }
@@ -19,12 +19,10 @@ exports.getCustomerOrdersAsCustomer = async (req, res) => {
 exports.deleteCustomerOrderAsCustomer = async (req, res) => {
     const { id } = req.params;
     const { user } = req;
-    console.log('user: ', user);
-    console.log('id: ', id);
     try {
         const updatedOrder = await Order.findOneAndUpdate(
-            { _id: id, customerId: user._id },
-            { isVisible: false },
+            { _id: id, customer: user._id },
+            { isDeletedByCustomer: true },
             { new: true }
         );
         if (updatedOrder) {
@@ -93,7 +91,7 @@ exports.getAllOrdersAsAdmin = async (req, res) => {
             return res.status(404).json({ error: 'Orders not found' });
         }
     } catch (e) {
-        console.log('ERROR fetching orders: ', e);
+        console.error('ERROR fetching orders: ', e);
         return res.status(500).json({ error: e.message });
     }
 };
@@ -101,7 +99,7 @@ exports.getAllOrdersAsAdmin = async (req, res) => {
 exports.getSingleOrderAsAdmin = async (req, res) => {
     const { id } = req.params;
     try {
-        const order = await Order.findById(id).populate('customer', 'name surname');
+        const order = await Order.findById(id).populate('customer', 'firstName surname');
         if (order) {
             return res.status(200).json(order);
         } else {
@@ -115,7 +113,7 @@ exports.getSingleOrderAsAdmin = async (req, res) => {
 
 exports.updateOrderAsAdmin = async (req, res) => {
     const { id } = req.params;
-    const updateData = req.body;    
+    const updateData = req.body;
 
     try {
         const updatedOrder = await Order.findByIdAndUpdate(id, updateData, { new: true });

@@ -12,9 +12,4 @@ router.put('/:id', authentMiddleware, authorize(['moderator', 'admin']), upload.
 router.delete('/:id', authentMiddleware, authorize(['moderator', 'admin']), productCategoryController.deleteCategory);
 
 
-
-router.all('*', (req, res) => {
-    res.status(404).json({ error: 'Not a valid API address' });
-});
-
 module.exports = router;
