@@ -62,7 +62,7 @@ exports.registerCustomer = async (req, res) => {
 };
 
 exports.loginCustomer = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body
 
     if (!email || !password) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -72,6 +72,11 @@ exports.loginCustomer = async (req, res) => {
         let customer = await Customer.findOne({ email }).lean();
         if (!customer) {
             return res.status(401).json({ error: 'Invalid email or password' });
+        }
+        //console.log(customer);
+        //// tu trzeba sprawdzic czy hasło istnieje jak nie to sprawdzic czy istnieje google_id lub facebook_id jak tak to wyswietlic komunikat ze konto zastalo zarehjestrowane przy pomocy rejestracji z google lub facebook
+        if (!customer.password) {
+            return res.status(401).json({ error: 'This account was registered using Google or Facebook, please log in using those methods.' });
         }
         const isMatch = await bcrypt.compare(password, customer.password);
         if (!isMatch) {
@@ -238,7 +243,7 @@ exports.session = async (req, res) => {
     if (!req.user || !req.user._id) {
         return res.status(401).json({ error: 'User not authenticated' });
     }
-   res.json(req.user);
+    res.json(req.user);
 };
 
 exports.logout = async (req, res) => {
@@ -299,16 +304,17 @@ passport.use(
                     if (!user.surname && profile.name.familyName) {
                         updateFields.surname = profile.name.familyName;
                     }
-                    
+
                     if (Object.keys(updateFields).length > 0) {
                         Object.assign(user, updateFields);
                         await user.save();
                     }
-                    
+
                     return done(null, user);
                 }
 
                 user = new Customer({
+                    provider: 'google',
                     googleId: profile.id,
                     firstName: profile.name.givenName || profile.displayName.split(' ')[0],
                     surname: profile.name.familyName || '',
@@ -364,6 +370,7 @@ passport.use(
             let user = await Customer.findOne({ facebookId: profile.id });
             if (!user) {
                 user = new Customer({
+                    provider: 'facebook',
                     facebookId: profile.id,
                     firstName: profile.name.givenName || profile.displayName.split(' ')[0] || '',
                     surname: profile.name.familyName || '',

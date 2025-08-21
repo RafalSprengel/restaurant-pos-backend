@@ -22,7 +22,7 @@ const customerSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true, 
+        unique: true,
     },
     address: {
         city: {
@@ -44,9 +44,14 @@ const customerSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: function() {
-            return !this.googleId && !this.facebookId;
+        required: function () {
+            return this.provider === 'local';
         },
+    },
+    provider: {
+        type: String,
+        enum: ['local', 'google', 'facebook'],
+        default: 'local',
     },
     googleId: {
         type: String
