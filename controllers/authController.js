@@ -33,7 +33,7 @@ const generateToken = (user) => {
 exports.registerCustomer = async (req, res) => {
     const { firstName, surname, email, phone, password } = req.body;
     if (!firstName || !surname || !email || !phone || !password) return res.status(422).json({ error: 'Missing required fields' });
-    if (!/^\+?\d{8,14}$/.test(phone)) return res.status(422).json({ error: 'Phone number must be between 9 and 15 digits long' });
+    if (!/^\+?\d{5,14}$/.test(phone)) return res.status(422).json({ error: 'Phone number must be between 6 and 15 digits long' });
 
     try {
         if (!process.env.JWT_SECRET) return res.status(500).json({ error: 'no process.env.JWT_SECRET, check .env file' });

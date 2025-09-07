@@ -9,7 +9,7 @@ const apiRoutes = require('./routes/v1/index.js');
 const app = express();
 const cookieParser = require('cookie-parser');
 const visits = require('./middleware/visits');
-const Visit = require('./db/models/Visit')
+let path = require('path');
 const stripeController = require('./controllers/stripeController');
 
 // All patch start from /api  e.g. wen use '/v1/auth/login' in real is '/api/v1/auth/login'
@@ -18,6 +18,8 @@ console.error = (...args) => {
     logger.error(args);
     originalConsoleError(...args);
 };
+
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 const allowedOrigins = [
     'http://localhost:3000',
