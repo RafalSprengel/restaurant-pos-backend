@@ -73,6 +73,7 @@ exports.loginCustomer = async (req, res) => {
         if (!customer) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
+        console.log('test 07/09/2025 10:53');
         //console.log(customer);
         //// tu trzeba sprawdzic czy hasło istnieje jak nie to sprawdzic czy istnieje google_id lub facebook_id jak tak to wyswietlic komunikat ze konto zastalo zarehjestrowane przy pomocy rejestracji z google lub facebook
         if (!customer.password) {
