@@ -5,13 +5,13 @@ function authorize(roles = []) {
         try {
             const staff = await Staff.findById(req.user._id);
             if (!staff || !roles.includes(staff.role)) {
-                return res.status(403).json({ error: 'Access denied' });
+                return res.status(403).json({ error: "You don't have enough rights to perform this action" });
             }
 
             next();
         } catch (err) {
             console.error('Error during authorization:', err);
-            return res.status(500).json({ error: 'Server error during authorization' });
+            return res.status(500).json({ error: 'Server error, authorization failed!' });
         }
     };
 }
