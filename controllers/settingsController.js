@@ -4,13 +4,22 @@ exports.getSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) {
-      settings = await Settings.create({}); // tworzymy domyślne jeśli brak
+      settings = await Settings.create({}); 
     }
-    res.json(settings);
+
+    const settingsObj = settings.toObject();
+    delete settingsObj.smtpSettings.pass;
+    delete settingsObj.createdAt;
+    delete settingsObj.updatedAt;
+    delete settingsObj.__v;
+    delete settingsObj._id;
+
+    res.json(settingsObj);
   } catch (err) {
     res.status(500).json({ message: "Failed to get settings." });
   }
-};
+}
+
 
 exports.updateSettings = async (req, res) => {
   const { reservationSettings, smtpSettings } = req.body;
