@@ -18,7 +18,7 @@ router.get('/reservations', authentMiddleware, authorize(['guest', 'member', 'mo
 router.get('/reservations/:id', authentMiddleware, authorize(['guest', 'member', 'moderator', 'admin']), tableController.getReservationById)
 
 //router.delete('/reservations/:id', authentMiddleware, authorize(['admin']), tableController.deleteSingleReservaton)
-router.delete('/reservations/:id', authentMiddleware, authorize(['guest', 'member', 'moderator', 'admin']), tableController.deleteReservatonById)
+router.delete('/reservations/:id', authentMiddleware, authorize([ 'member', 'moderator', 'admin']), tableController.deleteReservatonById)
 
 
 router.post('/', authentMiddleware, authorize(['moderator', 'admin']), tableController.addTable)
