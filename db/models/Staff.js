@@ -7,7 +7,7 @@ const staffSchema = new mongoose.Schema({
         type: Number,
         unique: true,
     },
-    name: {
+    firstName: {
         type: String,
         required: true,
     },
@@ -27,7 +27,7 @@ const staffSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: [ 'member', 'moderator', 'admin'],
+        enum: [ 'guest', 'member', 'moderator', 'admin'],
         default: 'member',
     },
 }, { strict: 'throw' });

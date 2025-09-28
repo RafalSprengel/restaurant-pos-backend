@@ -10,8 +10,8 @@ router.put('/customer/:id', authentMiddleware, orderController.deleteCustomerOrd
 
 //==========  ADMIN PANEL  ==========//
 router.get('/order-types',orderController.getOrderTypesAsAdmin);
-router.get('/', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.getAllOrdersAsAdmin);
-router.get('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.getSingleOrderAsAdmin);
+router.get('/', authentMiddleware, authorize(['guest', 'member', 'moderator', 'admin']), orderController.getAllOrdersAsAdmin);
+router.get('/:id', authentMiddleware, authorize(['guest', 'member', 'moderator', 'admin']), orderController.getSingleOrderAsAdmin);
 router.put('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), orderController.updateOrderAsAdmin);
 router.delete('/:id', authentMiddleware, authorize(['admin']), orderController.deleteOrderAsAdmin);
 

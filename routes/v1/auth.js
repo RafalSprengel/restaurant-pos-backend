@@ -2,13 +2,14 @@ const express = require('express');
 const passport = require('passport');
 const authentMiddleware = require('../../middleware/authentMiddleware');
 const authController = require('../../controllers/authController');
+const authorize = require('../../middleware/authorize');
 
 const router = express.Router();
 
 router.post('/register/customer', authController.registerCustomer);
 router.post('/login/customer', authController.loginCustomer);
 
-router.post('/register/mgmt', authController.registerMgmt);
+router.post('/register/mgmt',authentMiddleware, authorize(['admin']), authController.registerMgmt);
 router.post('/login/mgmt', authController.loginMgmt);
 
 router.get('/session', authentMiddleware, authController.session);

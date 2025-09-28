@@ -11,8 +11,8 @@ router.put('/customer/update-password', authentMiddleware, customerController.up
 router.delete('/customer/', authentMiddleware, customerController.deleteUserAccountAsUser)
 
 //==========  ADMIN PANEL  ==========//
-router.get('/', authentMiddleware, authorize(['member', 'moderator', 'admin']), customerController.getCustomersAsAdmin);
-router.get('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']), customerController.getSingleCustomerAsAdmin);
+router.get('/', authentMiddleware, authorize(['guest', 'member', 'moderator', 'admin']), customerController.getCustomersAsAdmin);
+router.get('/:id', authentMiddleware, authorize(['guest', 'member', 'moderator', 'admin']), customerController.getSingleCustomerAsAdmin);
 router.put('/:id', authentMiddleware, authorize(['member', 'moderator', 'admin']),customerController.updateCustomerAsAdmin);
 router.delete('/:id', authentMiddleware, authorize(['admin']), customerController.deleteCustomerAsAdmin);
 

@@ -5,6 +5,6 @@ const router = express.Router();
 const statsController = require('../../controllers/statsController');
 const authorize = require('../../middleware/authorize');
 
-router.get('/', authentMiddleware, authorize(['admin']), statsController.getStats)
+router.get('/', authentMiddleware,  authorize(['guest', 'member', 'moderator', 'admin']), statsController.getStats)
 
 module.exports = router;

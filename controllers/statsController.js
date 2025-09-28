@@ -6,7 +6,7 @@ exports.getStats = async (req, res) => {
   try {
       const orders = await Order.find({ isPaid: true });
       const totalOrders = orders.length;
-      const recentOrders = orders.filter(order => order.createdAt > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)); // ostatnie 7 dni
+      const recentOrders = orders.filter(order => order.createdAt > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)); 
       const last7DaysOrders = recentOrders.length;
 
       const today = new Date();
@@ -24,7 +24,7 @@ exports.getStats = async (req, res) => {
       const last7DaysOrdersList = await Order.find({ createdAt: { $gte: sevenDaysAgo }, isPaid: true }).sort({ createdAt: -1 });
 
       const topProducts = await Order.aggregate([
-          { $match: { isPaid: true } }, // dodany filtr na płatność
+          { $match: { isPaid: true } },
           { $unwind: "$products" },
           { $group: { _id: "$products.productId", totalQuantity: { $sum: "$products.quantity" } } },
           { $sort: { totalQuantity: -1 } },
@@ -49,14 +49,14 @@ exports.getStats = async (req, res) => {
       ]);
 
       res.status(200).json({
-          totalOrders, // liczba
-          totalRevenue: orders.reduce((acc, order) => acc + order.totalPrice, 0), // suma revenue
-          last7DaysOrders, // liczba
-          last7DaysRevenue: recentOrders.reduce((acc, order) => acc + order.totalPrice, 0), // suma revenue za ostatnie 7 dni
-          totalVisitors, // liczba
-          last7DaysVisitors, // liczba
-          last7DaysOrdersList, // lista zamówień z ostatnich 7 dni
-          topProducts // top produkty
+          totalOrders, 
+          totalRevenue: orders.reduce((acc, order) => acc + order.totalPrice, 0), 
+          last7DaysOrders, 
+          last7DaysRevenue: recentOrders.reduce((acc, order) => acc + order.totalPrice, 0), 
+          totalVisitors, 
+          last7DaysVisitors, 
+          last7DaysOrdersList, 
+          topProducts 
       });
   } catch (e) {
       console.log('ERROR fetching stats: ', e);
