@@ -56,7 +56,7 @@ exports.getStaffRoles = async (req, res) => {
 
 exports.getSingleStaff = async (req, res) => {
     try {
-        const staff = await Staff.findById(req.params.id).select('name surname email role');
+        const staff = await Staff.findById(req.params.id).select('name firstName surname email role');
         if (staff) {
             return res.status(200).json(staff);
         } else {
