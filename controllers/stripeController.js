@@ -86,6 +86,7 @@ exports.createCheckoutSession = async (req, res) => {
             payment_intent_data: {
                 metadata: { orderId: order._id.toString() },
             },
+             locale: 'en', // Force EN lang
         });
 
         res.json({ url: session.url });

@@ -9,12 +9,18 @@ exports.newMessageFromForm = async (req, res) => {
     return res.status(400).json({ body: 'All fields are required.' });
   }
 
+  let newMessage;
   try {
-    const newMessage = await Message.create({ name, email, subject, body });
-
+    newMessage = await Message.create({ name, email, subject, body });
+  } catch (dbErr) {
+    console.error('Database error on message creation:', dbErr);
+    return res.status(500).json({ message: 'Failed to send message.' });
+  }
+  try {
     const settings = await Settings.findOne({}).sort({ createdAt: -1 });
     if (!settings) {
-      return res.status(500).json({ message: 'SMTP settings not found in database.' });
+      console.error('SMTP settings not found in database.');
+      return res.status(201).json({ message: 'Message sent successfully.' });
     }
 
     const transporter = nodemailer.createTransport({
@@ -45,16 +51,16 @@ exports.newMessageFromForm = async (req, res) => {
       await transporter.sendMail(adminMailOptions);
       await transporter.sendMail(customerMailOptions);
     } catch (emailErr) {
-      console.error('SMTP send error:', emailErr);
-      return res.status(500).json({ message: 'Failed to send emails. Check SMTP configuration.' });
+      console.error('Failed to send emails. Check SMTP configuration. Message saved to DB.', emailErr);
     }
 
     res.status(201).json({ message: 'Message sent successfully.' });
   } catch (err) {
-    console.error('General error:', err);
-    res.status(500).json({ message: 'Something went wrong.' });
+    console.error('General error during email processing (message saved to DB):', err);
+    res.status(201).json({ message: 'Message sent successfully.' });
   }
 };
+
 exports.getReceivedMessages = async (req, res) => {
   try {
     result = await Message.find({ type: 'received' })
