@@ -25,7 +25,7 @@ const allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://localhost:3000', 
-    'https://demo1.rafalsprengel.com',
+    'https://restaurant.rafalsprengel.com',
     'https://192.168.0.74:3000'
 ];
 
