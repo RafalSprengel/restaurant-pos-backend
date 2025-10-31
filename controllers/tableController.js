@@ -4,7 +4,7 @@ const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
 dayjs.extend(isToday);
 dayjs.extend(utc);
-dayjs.extend(timezone);
+dayjs.extend(timezone); 
 
 const Table = require('../db/models/Table');
 const Reservation = require('../db/models/Reservation');
