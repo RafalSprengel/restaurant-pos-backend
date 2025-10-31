@@ -9,23 +9,20 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
-      - name: Set up SSH key
+      - name: Sync project files to VPS (rsync)
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p 2222 188.68.242.226 >> ~/.ssh/known_hosts
+          rsync -avz --delete --exclude 'node_modules' --exclude '.git' -e "ssh -p 2222" ./ rafal@188.68.242.226:/var/www/restaurant.rafalsprengel.com/api/
 
-      - name: Sync project files to VPS
+      - name: Install dependencies and restart server on VPS (ssh)
         run: |
-          rsync -avz --delete --exclude 'node_modules' --exclude '.git' -e "ssh -p 2222 -i ~/.ssh/id_rsa" ./ rafal@188.68.242.226:/var/www/restaurant.rafalsprengel.com/api/
-
-      - name: Install dependencies and restart server on VPS
-        run: |
-          ssh -p 2222 -i ~/.ssh/id_rsa rafal@188.68.242.226 "
+          ssh -p 2222 rafal@188.68.242.226 "
             export NVM_DIR=\"\$HOME/.nvm\"
             [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
             cd /var/www/restaurant.rafalsprengel.com/api &&
