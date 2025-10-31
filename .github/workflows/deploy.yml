@@ -8,8 +8,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up SSH key
         run: |
@@ -20,10 +22,10 @@ jobs:
 
       - name: Deploy to VPS
         run: |
-          ssh -p 2222 -i ~/.ssh/id_rsa rafal@188.68.242.226 "
-            cd /var/www/restaurant.rafalsprengel.com/api &&
-            git fetch --all &&
-            git reset --hard origin/main &&
-            npm install &&
+          ssh -p 2222 -i ~/.ssh/id_rsa rafal@188.68.242.226 << 'EOF'
+            cd /var/www/restaurant.rafalsprengel.com/api
+            git fetch --all
+            git reset --hard origin/main
+            npm install
             pm2 restart restaurant-api || pm2 start npm --name 'restaurant-api' -- run start
-          "
+          EOF
