@@ -8,9 +8,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up SSH key
@@ -20,12 +19,16 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p 2222 188.68.242.226 >> ~/.ssh/known_hosts
 
-      - name: Deploy to VPS
+      - name: Sync project files to VPS
         run: |
-          ssh -p 2222 -i ~/.ssh/id_rsa rafal@188.68.242.226 << 'EOF'
-            cd /var/www/restaurant.rafalsprengel.com/api
-            git fetch --all
-            git reset --hard origin/main
-            npm install
+          rsync -avz --delete --exclude 'node_modules' --exclude '.git' -e "ssh -p 2222 -i ~/.ssh/id_rsa" ./ rafal@188.68.242.226:/var/www/restaurant.rafalsprengel.com/api/
+
+      - name: Install dependencies and restart server on VPS
+        run: |
+          ssh -p 2222 -i ~/.ssh/id_rsa rafal@188.68.242.226 "
+            export NVM_DIR=\"\$HOME/.nvm\"
+            [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
+            cd /var/www/restaurant.rafalsprengel.com/api &&
+            npm install --production &&
             pm2 restart restaurant-api || pm2 start npm --name 'restaurant-api' -- run start
-          EOF
+          "
