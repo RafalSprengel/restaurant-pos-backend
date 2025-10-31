@@ -1,0 +1,29 @@
+name: Deploy Backend to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Deploy to VPS
+        run: |
+          ssh -p 2222 rafal@188.68.242.226 "
+            cd /var/www/restaurant.rafalsprengel.com/api &&
+            git fetch --all &&
+            git reset --hard origin/main &&
+            npm install &&
+            pm2 restart restaurant-api || pm2 start npm --name 'restaurant-api' -- run start
+          "
