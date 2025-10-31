@@ -10,19 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Set up SSH agent
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Configure SSH for Deployment
+        run: |
+          mkdir -p ~/.ssh
+          
+          # 1. Tworzenie klucza prywatnego z sekretu
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # 2. Dodanie klucza hosta, aby uniknąć błędu "Host key verification failed"
+          ssh-keyscan -p 2222 188.68.242.226 >> ~/.ssh/known_hosts
 
       - name: Sync project files to VPS (rsync)
         run: |
-          rsync -avz --delete --exclude 'node_modules' --exclude '.git' -e "ssh -p 2222" ./ rafal@188.68.242.226:/var/www/restaurant.rafalsprengel.com/api/
+          rsync -avz --delete --exclude 'node_modules' --exclude '.git' -e "ssh -p 2222 -i ~/.ssh/deploy_key" ./ rafal@188.68.242.226:/var/www/restaurant.rafalsprengel.com/api/
 
       - name: Install dependencies and restart server on VPS (ssh)
         run: |
-          ssh -p 2222 rafal@188.68.242.226 "
+          ssh -p 2222 -i ~/.ssh/deploy_key rafal@188.68.242.226 "
             export NVM_DIR=\"\$HOME/.nvm\"
             [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
             cd /var/www/restaurant.rafalsprengel.com/api &&
