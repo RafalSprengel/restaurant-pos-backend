@@ -33,5 +33,5 @@ jobs:
             [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
             cd /var/www/restaurant.rafalsprengel.com/api &&
             npm install --production &&
-            pm2 restart restaurant-api || pm2 start npm --name 'restaurant-api' -- run start
+            pm2 restart index || pm2 start npm --name 'index' -- run start
           "
