@@ -16,15 +16,14 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 2222 188.68.242.226 >> ~/.ssh/known_hosts
+          ssh-keyscan -p 2222 87.102.119.70 >> ~/.ssh/known_hosts
 
       - name: Sync project files to VPS (rsync)
         run: |
-          rsync -avz --delete --exclude 'node_modules' --exclude '.git' --exclude '.env' -e "ssh -p 2222 -i ~/.ssh/deploy_key" ./ rafal@188.68.242.226:/var/www/restaurant.rafalsprengel.com/api/
-
+          rsync -avz --delete --exclude 'node_modules' --exclude '.git' --exclude '.env' -e "ssh -p 2222 -i ~/.ssh/deploy_key" ./ rafal@87.102.119.70:/var/www/restaurant.rafalsprengel.com/api/
       - name: Install dependencies and restart server on VPS (ssh)
         run: |
-          ssh -p 2222 -i ~/.ssh/deploy_key rafal@188.68.242.226 "
+          ssh -p 2222 -i ~/.ssh/deploy_key rafal@87.102.119.70 "
             export NVM_DIR=\"\$HOME/.nvm\"
             [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
             cd /var/www/restaurant.rafalsprengel.com/api &&
