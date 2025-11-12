@@ -116,12 +116,7 @@ exports.loginCustomer = async (req, res) => {
 };
 
 exports.registerMgmt = async (req, res) => {
-   // const { firstName, surname, email, role, password } = req.body;
-   const firstName = 'John';
-   const surname = 'Smith';
-   const email = 'admin@admin.com'
-   const role = 'admin';
-   const password = 'superuser';
+    const { firstName, surname, email, role, password } = req.body;
     if (!firstName || !surname || !email || !password) return res.status(422).json({ error: 'Missing required fields' });
 
     try {
