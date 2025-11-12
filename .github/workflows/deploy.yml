@@ -26,12 +26,26 @@ jobs:
         run: |
           rsync -avz --delete --exclude 'node_modules' --exclude '.git' --exclude '.env' -e "ssh -p 2222 -i ~/.ssh/deploy_key" ./ rafal@87.102.119.70:/var/www/restaurant.rafalsprengel.com/api/
           
-      - name: 4. Install dependencies and restart server on VPS (ssh)
+      - name: 4. Create .env file on VPS
+        run: |
+          ssh -p 2222 -i ~/.ssh/deploy_key rafal@87.102.119.70 "cat > /var/www/restaurant.rafalsprengel.com/api/.env <<EOF
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          FACEBOOK_CLIENT_ID=${{ secrets.FACEBOOK_CLIENT_ID }}
+          FACEBOOK_CLIENT_SECRET=${{ secrets.FACEBOOK_CLIENT_SECRET }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_SECRET_REFRESH=${{ secrets.JWT_SECRET_REFRESH }}
+          STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          EOF"
+
+      - name: 5. Install dependencies and restart server on VPS (ssh)
         run: |
           ssh -p 2222 -i ~/.ssh/deploy_key rafal@87.102.119.70 "
             export NVM_DIR=\"\$HOME/.nvm\"
             [ -s \"\$NVM_DIR/nvm.sh\" ] && \. \"\$NVM_DIR/nvm.sh\"
             cd /var/www/restaurant.rafalsprengel.com/api &&
             npm install --production &&
-            pm2 restart index || pm2 start npm --name 'restaurant-api' -- run start
+            pm2 restart restaurant-api || pm2 start npm --name 'restaurant-api' -- run start
           "
