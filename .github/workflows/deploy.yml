@@ -18,11 +18,15 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p 2222 87.102.119.70 >> ~/.ssh/known_hosts
 
-      - name: 2. Sync project files to VPS (rsync)
+      - name: 2. Prepare remote directories
+        run: |
+          ssh -p 2222 -i ~/.ssh/deploy_key rafal@87.102.119.70 "mkdir -p /var/www/restaurant.rafalsprengel.com/api/"
+
+      - name: 3. Sync project files to VPS (rsync)
         run: |
           rsync -avz --delete --exclude 'node_modules' --exclude '.git' --exclude '.env' -e "ssh -p 2222 -i ~/.ssh/deploy_key" ./ rafal@87.102.119.70:/var/www/restaurant.rafalsprengel.com/api/
           
-      - name: 3. Install dependencies and restart server on VPS (ssh)
+      - name: 4. Install dependencies and restart server on VPS (ssh)
         run: |
           ssh -p 2222 -i ~/.ssh/deploy_key rafal@87.102.119.70 "
             export NVM_DIR=\"\$HOME/.nvm\"
