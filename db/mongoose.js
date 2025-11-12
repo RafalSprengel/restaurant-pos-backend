@@ -1,8 +1,7 @@
-const { database_url } = require('../config.js');
-
 const mongoose = require('mongoose');
+
 mongoose
-    .connect(database_url)
+    .connect( process.env.DATABASE_URL)
     .then(() => {
         console.log('Connected to MongoDB');
     })

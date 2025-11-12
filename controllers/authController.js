@@ -6,8 +6,8 @@ const FacebookStrategy = require('passport-facebook').Strategy;
 const RefreshToken = require('../db/models/RefreshToken');
 const Customer = require('../db/models/Customer');
 const { Staff } = require('../db/models/Staff');
-const jwtAccessTokenMaxAge = parseInt(process.env.JWT_ACCESS_TOKEN_MAX_AGE) || 3600;  // default 1h
-const jwtRefreshTokenMaxAge = parseInt(process.env.JWT_REFRESH_TOKEN_MAX_AGE) || 3600 * 24 * 15;  // default 15 days
+const jwtAccessTokenMaxAge = 3600;  // default 1h
+const jwtRefreshTokenMaxAge = 3600 * 24 * 15;  // default 15 days
 
 const generateToken = (user) => {
     const payload = {

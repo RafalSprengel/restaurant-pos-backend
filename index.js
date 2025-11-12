@@ -2,7 +2,6 @@ require('dotenv').config();
 const logger = require('./utils/logger');
 require('./db/mongoose.js');
 const cors = require('cors');
-const { port } = require('./config.js');
 const express = require('express');
 const passport = require('./config/passport');
 const apiRoutes = require('./routes/v1/index.js');
@@ -57,6 +56,6 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Sorry, not valid API address.' });
 });
 
-app.listen(port, () => {
-    console.log('Server is listening on port ' + port);
+app.listen(3001, () => {
+    console.log('Server is listening on port ' + 3001);
 });
