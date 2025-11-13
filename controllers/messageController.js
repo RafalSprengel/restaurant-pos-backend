@@ -186,7 +186,7 @@ exports.replyToMessage = async (req, res) => {
   const { originalMessageId, body, subject } = req.body;
 
   if (!originalMessageId || !body || !subject) {
-    return res.status(400).json({ message: 'ID, body, and subject are required.' });
+    return res.status(400).json({ message: 'Original message  id, body, and subject are required.' });
   }
 
   try {

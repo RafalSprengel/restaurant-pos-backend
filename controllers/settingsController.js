@@ -16,7 +16,7 @@ exports.getSettings = async (req, res) => {
 
     res.json(settingsObj);
   } catch (err) {
-    res.status(500).json({ message: "Failed to get settings." });
+    res.status(500).json({ message: "Failed to get settingsssss.", error: err.message });
   }
 }
 
