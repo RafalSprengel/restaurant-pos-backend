@@ -3,12 +3,16 @@ const Settings = require("../db/models/Settings.js");
 exports.getSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
-    if (!settings) {
-      settings = await Settings.create({}); 
-    }
 
+    if (!settings) {
+      settings = await Settings.create({});
+    }
     const settingsObj = settings.toObject();
-    delete settingsObj.smtpSettings.pass;
+
+    if (settingsObj.smtpSettings) {
+      delete settingsObj.smtpSettings.pass;
+    }
+    
     delete settingsObj.createdAt;
     delete settingsObj.updatedAt;
     delete settingsObj.__v;
@@ -16,7 +20,10 @@ exports.getSettings = async (req, res) => {
 
     res.json(settingsObj);
   } catch (err) {
-    res.status(500).json({ message: "Failed to get settingsssss.", error: err.message });
+    res.status(500).json({ 
+      message: "Failed to get settings.", 
+      error: err.message 
+    });
   }
 }
 
