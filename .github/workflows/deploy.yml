@@ -20,12 +20,15 @@ jobs:
 
       - name: 2. Prepare remote directories
         run: |
-          ssh -p 2222 -i ~/.ssh/deploy_key rafal@87.102.119.70 "mkdir -p /var/www/restaurant.rafalsprengel.com/api/"
+          ssh -p 2222 -i ~/.ssh/deploy_key rafal@87.102.119.70 "
+            mkdir -p /var/www/restaurant.rafalsprengel.com/api/
+            mkdir -p /var/www/restaurant.rafalsprengel.com/api/uploads
+          "
 
       - name: 3. Sync project files to VPS (rsync)
         run: |
-          rsync -avz --delete --exclude 'node_modules' --exclude '.git' --exclude '.env' -e "ssh -p 2222 -i ~/.ssh/deploy_key" ./ rafal@87.102.119.70:/var/www/restaurant.rafalsprengel.com/api/
-          
+          rsync -avz --delete --exclude 'node_modules' --exclude '.git' --exclude '.env' --exclude 'uploads' -e "ssh -p 2222 -i ~/.ssh/deploy_key" ./ rafal@87.102.119.70:/var/www/restaurant.rafalsprengel.com/api/
+
       - name: 4. Create .env file on VPS
         run: |
           ssh -p 2222 -i ~/.ssh/deploy_key rafal@87.102.119.70 "cat > /var/www/restaurant.rafalsprengel.com/api/.env <<EOF
