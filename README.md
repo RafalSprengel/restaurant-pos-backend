@@ -35,9 +35,7 @@ The RESTful API engine for the Restaurant Point of Sale system. Built with Node.
 1. Clone the repository: `git clone https://github.com/RafalSprengel/restaurant-pos-backend`
 2. Install dependencies: `npm install`
 3. Configure environment: Create a `.env` file with the following keys:
-   - `MONGO_URI`
-   - `JWT_SECRET`
-   - `STRIPE_SECRET_KEY`
+   (Detailed example variables are provided in the .env.example file)
 4. Start server: `npm start` (or `npm run dev` for development)
 
 ## 🔄 Status
