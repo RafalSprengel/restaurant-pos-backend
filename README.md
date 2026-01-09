@@ -9,7 +9,7 @@ The RESTful API engine for the Restaurant Point of Sale system. Built with Node.
 - **Connected Frontend:** [https://restaurant.rafalsprengel.com/](https://restaurant.rafalsprengel.com/)
 
 ## 🔑 Core Functionalities
-- **User Registration & Authentication** – Support for registering new users, logging in, and managing sessions using Passport.js with JWT. Supports multiple roles such as client, staff, and administrator.  
+- **User Registration & Authentication** – Support for registering new users of different types (Customer, Member, Moderator, Administrator), logging in, and managing sessions using Passport.js with JWT. Role-based access determines which data and operations each user can perform. 
 - **Secure Authentication**: Implementation of Passport.js with JWT strategies for stateless user sessions.
 - **Payment Processing** – Stripe API integration, including webhook handling for secure, server-side transactions.
 - **Product & Category Management** – Full CRUD operations for menu products and categories.
