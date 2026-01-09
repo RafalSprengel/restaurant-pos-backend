@@ -10,8 +10,11 @@ The RESTful API engine for the Restaurant Point of Sale system. Built with Node.
 
 ## 🔑 Core Functionalities
 - **Secure Authentication**: Implementation of Passport.js with JWT strategies for stateless user sessions.
-- **Payment Processing**: Full Stripe API integration for handling secure, server-side transactions.
-- **Data Persistence**: Complex Mongoose schemas for managing products, categories, users, and orders.
+- **Payment Processing** – Full Stripe API integration, including webhook handling for secure, server-side transactions.
+- **Product & Category Management** – Full CRUD operations for menu products and categories.
+- **Order Management** – Create, update, and track orders, including user-specific order history.
+- **Table Reservation System** – Check table availability, create and manage reservations, validate dates and times, prevent overlapping bookings.
+- **Messaging System** – Receive and store messages from frontend contact forms, send replies, track read/unread status, and optionally notify via SMTP email.
 - **Role-Based Access**: Middleware-driven protection for administrative routes and resources.
 - **Error Tracking**: Custom middleware system that logs server errors to local files for production monitoring.
 - **CORS & Security**: Configured for secure communication with the frontend application.
@@ -22,6 +25,7 @@ The RESTful API engine for the Restaurant Point of Sale system. Built with Node.
 - **Database**: MongoDB & Mongoose (ODM)
 - **Security**: Passport.js, JWT (JSON Web Tokens), Bcrypt (password hashing)
 - **Payments**: Stripe SDK
+- **Messaging:** Nodemailer 
 - **Utilities**: Dotenv (environment management), Morgan (HTTP request logging)
 
 ## 📁 Project Structure
