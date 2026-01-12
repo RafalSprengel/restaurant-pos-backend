@@ -1,7 +1,7 @@
 {
-    "name": "server",
+    "name": "restaurant-web-platform-backend",
     "version": "1.0.0",
-    "description": "",
+    "description": "Restaurant Web Platform & Online Ordering System - Backend",
     "main": "index.js",
     "scripts": {
         "start": "node index.js",
