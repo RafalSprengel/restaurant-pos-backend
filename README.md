@@ -111,7 +111,6 @@ This backend is designed as the core engine of a restaurant management ecosystem
 | Authentication | JWT, Passport.js, bcrypt |
 | Payments | Stripe API |
 | Email | SMTP |
-| Logging | Morgan |
 
 ---
 
